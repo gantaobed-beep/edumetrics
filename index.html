@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - EduMetrics</title>
+    <!-- Tailwind & Chart.js -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -21,6 +22,7 @@
 </head>
 <body class="flex h-screen overflow-hidden">
 
+    <!-- Sidebar -->
     <aside class="w-64 border-r border-gray-200 flex flex-col shadow-sm z-10 relative bg-white">
         <div class="p-6 border-b border-gray-100 flex items-center justify-center">
             <div class="w-10 h-10 bg-gradient-to-br from-green-400 to-blue-500 rounded-lg flex items-center justify-center mr-3 shadow-md text-white font-bold text-xl">E</div>
@@ -44,6 +46,7 @@
                 </div>
             </header>
 
+            <!-- Error Catcher Box -->
             <div id="errorBox" class="hidden bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-xl mb-8 shadow-sm">
                 <h3 class="font-bold text-lg mb-1"><i class="fas fa-exclamation-triangle"></i> System Crash Detected</h3>
                 <p id="errorText" class="text-sm mb-3">Something went wrong.</p>
@@ -55,10 +58,11 @@
                 <button onclick="switchTab('tab-overview')" id="btn-overview" class="tab-btn active text-lg font-semibold text-gray-500">Performance & Stress</button>
                 <button onclick="switchTab('tab-details')" id="btn-details" class="tab-btn text-lg font-semibold text-gray-500">Recent Test Details</button>
                 <button onclick="switchTab('tab-cognitive')" id="btn-cognitive" class="tab-btn text-lg font-semibold text-gray-500">Cognitive Profile</button>
-                <button onclick="switchTab('tab-topics')" id="btn-topics" class="tab-btn text-lg font-semibold text-gray-500">Topic Breakdown</button>
+                <button onclick="switchTab('tab-topics')" id="btn-topics" class="tab-btn text-lg font-semibold text-gray-500">Topic & Predictions</button>
                 <button onclick="switchTab('tab-community')" id="btn-community" class="tab-btn text-lg font-semibold text-gray-500">Community & Support</button>
             </div>
 
+            <!-- EMPTY STATE -->
             <div id="emptyState" class="hidden text-center py-24 glass-card border-dashed border-2 border-gray-300">
                 <div class="w-20 h-20 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-4"><i class="fas fa-brain text-3xl text-indigo-300"></i></div>
                 <h3 class="text-xl font-bold text-gray-800 mb-2">No Data Found</h3>
@@ -68,6 +72,7 @@
 
             <div id="dataContainer" class="hidden">
                 
+                <!-- TAB 1: OVERVIEW & STRESS -->
                 <div id="tab-overview" class="tab-content active">
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                         <div class="glass-card p-6 border-t-4 border-indigo-500"><p class="text-xs font-black text-gray-400 uppercase">True Accuracy (All Time)</p><h2 id="avgScore" class="text-5xl font-black text-gray-800">--%</h2></div>
@@ -84,6 +89,7 @@
                     </div>
                 </div>
 
+                <!-- TAB 2: RECENT TEST DETAILS -->
                 <div id="tab-details" class="tab-content">
                     <div class="flex justify-between items-end mb-6">
                         <div><h3 class="text-2xl font-black text-gray-800" id="recentTestSubj">Subject: --</h3><p class="text-gray-500 font-medium" id="recentTestDate">Scanned on: --</p></div>
@@ -92,6 +98,7 @@
                     <div id="qLogContainer" class="space-y-6"></div>
                 </div>
 
+                <!-- TAB 3: COGNITIVE PROFILE -->
                 <div id="tab-cognitive" class="tab-content">
                     <div class="bg-gradient-to-r from-indigo-900 to-purple-800 rounded-2xl p-6 text-white shadow-xl mb-8 flex flex-col md:flex-row items-center justify-between">
                         <div><h3 class="text-xl font-bold mb-1"><i class="fas fa-magic text-yellow-400 mr-2"></i> Auto-Practice Generation</h3><p id="practiceRecommendation" class="text-indigo-200 text-sm font-medium">Analyzing...</p></div>
@@ -103,18 +110,72 @@
                     </div>
                 </div>
 
+                <!-- TAB 4: TOPICS & PREDICTIONS (NEW SPLIT VIEW) -->
                 <div id="tab-topics" class="tab-content">
-                    <div class="glass-card p-8"><h3 class="font-black text-gray-800 text-xl mb-2">Errors by Topic</h3><div class="relative h-96"><canvas id="topicBarChart"></canvas></div></div>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <!-- Left: Past Errors -->
+                        <div class="glass-card p-8">
+                            <h3 class="font-black text-gray-800 text-xl mb-2">Historical Errors by Topic</h3>
+                            <p class="text-sm text-gray-500 mb-6">Identify specific areas where you have already lost points.</p>
+                            <div class="relative h-96"><canvas id="topicBarChart"></canvas></div>
+                        </div>
+
+                        <!-- Right: Future Mistake Predictions -->
+                        <div class="glass-card p-8 border-t-4 border-amber-400 bg-gradient-to-b from-amber-50/30 to-white">
+                            <h3 class="font-black text-gray-800 text-xl mb-2"><i class="fas fa-bolt text-amber-500 mr-2"></i> High-Risk Predictions</h3>
+                            <p class="text-sm text-gray-500 mb-6">AI-identified areas where you are likely to make mistakes in future exams.</p>
+                            
+                            <ul id="predictionList" class="space-y-4 max-h-96 overflow-y-auto pr-2">
+                                <!-- Populated by JS -->
+                            </ul>
+                        </div>
+                    </div>
                 </div>
 
+                <!-- TAB 5: COMMUNITY & SUPPORT -->
                 <div id="tab-community" class="tab-content">
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                         <div class="space-y-8">
-                            <div class="glass-card p-8"><h3 class="font-black text-gray-800 text-2xl mb-6"><i class="fas fa-question-circle text-indigo-500 mr-2"></i> FAQs</h3>
-                                <details class="bg-gray-50 rounded-xl border border-gray-200 p-4 mb-3 cursor-pointer"><summary class="font-bold text-gray-700 outline-none">How does the AI predict mistakes?</summary><p class="mt-3 text-sm text-gray-600">By analyzing the fundamental nature of your error to flag other high-risk formulas.</p></details>
+                            <div class="glass-card p-8">
+                                <h3 class="font-black text-gray-800 text-2xl mb-6"><i class="fas fa-question-circle text-indigo-500 mr-2"></i> Frequently Asked Questions</h3>
+                                <div class="space-y-3">
+                                    <details class="bg-gray-50 rounded-xl border border-gray-200 p-4 cursor-pointer group">
+                                        <summary class="font-bold text-gray-700 outline-none">How does the AI predict my future mistakes?</summary>
+                                        <p class="mt-3 text-sm text-gray-600 leading-relaxed">By analyzing the fundamental nature of your error (e.g., missing an exponent or dropping a negative sign), the engine maps other advanced formulas that use similar structures and flags them as high-risk for future exams.</p>
+                                    </details>
+                                    <details class="bg-gray-50 rounded-xl border border-gray-200 p-4 cursor-pointer group">
+                                        <summary class="font-bold text-gray-700 outline-none">What does the Stress Indicator mean?</summary>
+                                        <p class="mt-3 text-sm text-gray-600 leading-relaxed">If you make a high volume of 'Careless' or 'Time-related' errors despite demonstrating you understand the core concepts, the system flags this as potential test anxiety, rushing, or academic burnout.</p>
+                                    </details>
+                                </div>
                             </div>
-                            <div class="glass-card p-8 bg-gradient-to-br from-indigo-50 to-white"><h3 class="font-black text-gray-800 text-2xl mb-2"><i class="fas fa-lightbulb text-yellow-500 mr-2"></i> Suggestion Box</h3>
-                                <form onsubmit="submitSuggestion(event)"><textarea id="suggestionText" rows="3" class="w-full p-4 border border-gray-200 rounded-xl mb-4 outline-none" required></textarea><button type="submit" class="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl shadow-md">Submit</button></form>
+                            <div class="glass-card p-8 bg-gradient-to-br from-indigo-50 to-white">
+                                <h3 class="font-black text-gray-800 text-2xl mb-2"><i class="fas fa-lightbulb text-yellow-500 mr-2"></i> Suggestion Box</h3>
+                                <form onsubmit="submitSuggestion(event)">
+                                    <textarea id="suggestionText" rows="3" class="w-full p-4 border border-gray-200 rounded-xl mb-4 outline-none focus:border-indigo-500" placeholder="I would love it if..." required></textarea>
+                                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl shadow-md transition">Submit Suggestion</button>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="glass-card p-8">
+                            <h3 class="font-black text-gray-800 text-2xl mb-6"><i class="fas fa-star text-amber-400 mr-2"></i> Student Reviews</h3>
+                            <div class="space-y-4 max-h-[800px] overflow-y-auto pr-2">
+                                <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm relative overflow-hidden">
+                                    <div class="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
+                                    <div class="flex justify-between items-start mb-2">
+                                        <div><h4 class="font-bold text-gray-800">David K.</h4><p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Physics Student</p></div>
+                                        <div class="text-amber-400 text-xs"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
+                                    </div>
+                                    <p class="text-gray-600 text-sm italic">"The Future Mistake Predictor is scary accurate. It told me I would fail the chain rule next week based on my product rule errors... and it was right."</p>
+                                </div>
+                                <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm relative overflow-hidden">
+                                    <div class="absolute top-0 left-0 w-1 h-full bg-emerald-400"></div>
+                                    <div class="flex justify-between items-start mb-2">
+                                        <div><h4 class="font-bold text-gray-800">Sarah M.</h4><p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Calculus Student</p></div>
+                                        <div class="text-amber-400 text-xs"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
+                                    </div>
+                                    <p class="text-gray-600 text-sm italic">"The cognitive profile completely changed how I study. I realized I didn't need more practice problems; I just needed to slow down to fix my careless errors."</p>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -124,6 +185,7 @@
         </div>
     </main>
 
+    <!-- CUSTOM QUIZ MODAL -->
     <div id="quizModal" class="hidden fixed inset-0 bg-gray-900/80 z-50 flex items-center justify-center backdrop-blur-sm transition-opacity">
         <div class="bg-white rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl m-4">
             <div class="bg-indigo-600 p-6 text-white flex justify-between items-center">
@@ -144,6 +206,7 @@
         </div>
     </div>
 
+    <!-- Application Script -->
     <script>
         window.addEventListener('error', function(e) {
             document.getElementById('errorBox').classList.remove('hidden');
@@ -189,6 +252,9 @@
             let mistakes = { Conceptual: 0, Careless: 0, Practice: 0, Time: 0 };
             let topics = {};
             let progressHistory = [], labels = [];
+            
+            // This array will hold our predictions
+            let aiPredictions = [];
 
             historyData.forEach((test, tIndex) => {
                 labels.push(`Test ${tIndex + 1}`);
@@ -197,19 +263,27 @@
                 if (test.questions) {
                     test.questions.forEach(q => {
                         totalQ++;
-                        if(q.isCorrect) correctQ++;
-                        else {
+                        if(q.isCorrect) {
+                            correctQ++;
+                        } else {
                             if(q.mistakeType && mistakes[q.mistakeType] !== undefined) mistakes[q.mistakeType]++;
                             if(q.topic) topics[q.topic] = (topics[q.topic] || 0) + 1;
+                            
+                            // Capture the prediction if it exists
+                            if(q.prediction && q.prediction.trim() !== "") {
+                                aiPredictions.push({ topic: q.topic, text: q.prediction });
+                            }
                         }
                     });
                 }
             });
 
+            // Overview KPIs
             let overallAccuracy = totalQ > 0 ? Math.round((correctQ / totalQ) * 100) : 0;
             document.getElementById('avgScore').innerText = `${overallAccuracy}%`;
             document.getElementById('totQ').innerText = totalQ;
 
+            // STRESS INDICATOR
             let stressScore = (mistakes.Careless * 1.5 + mistakes.Time) / (totalQ || 1);
             let sCard = document.getElementById('stressCardBorder'), sLevel = document.getElementById('stressLevel'), sText = document.getElementById('stressText'), sIcon = document.getElementById('stressIcon');
 
@@ -224,6 +298,28 @@
                 sText.innerHTML = `Healthy learning state.`;
             }
 
+            // POPULATE THE NEW PREDICTIONS LIST
+            const predList = document.getElementById('predictionList');
+            if (aiPredictions.length > 0) {
+                // Get unique predictions and show the newest ones at the top
+                let uniquePreds = [...new Set(aiPredictions.map(p => JSON.stringify(p)))].map(p => JSON.parse(p)).reverse();
+                let predHtml = '';
+                uniquePreds.forEach(p => {
+                    predHtml += `
+                    <li class="bg-white p-4 rounded-xl border border-amber-100 shadow-sm flex gap-3">
+                        <div class="mt-1 text-amber-500"><i class="fas fa-exclamation-circle"></i></div>
+                        <div>
+                            <span class="block text-[10px] font-black text-amber-600 uppercase tracking-widest mb-1">${p.topic}</span>
+                            <p class="text-gray-700 text-sm font-medium">${p.text}</p>
+                        </div>
+                    </li>`;
+                });
+                predList.innerHTML = predHtml;
+            } else {
+                predList.innerHTML = `<li class="text-gray-500 text-center py-8 font-medium">No high-risk areas detected yet. Keep up the good work!</li>`;
+            }
+
+            // RECENT TEST RENDERING
             const latestTest = historyData[historyData.length - 1];
             document.getElementById('recentTestSubj').innerText = `Subject: ${latestTest.subject}`;
             document.getElementById('recentTestDate').innerText = `Scanned on: ${new Date(latestTest.date).toLocaleDateString()}`;
@@ -263,6 +359,7 @@
                 qLogContainer.insertAdjacentHTML('beforeend', cardHtml);
             });
 
+            // COGNITIVE ENGINE & PRACTICE GEN
             let cogScores = {
                 Analytical: Math.max(10, overallAccuracy - (mistakes.Conceptual * 2)), Logical: Math.max(10, overallAccuracy - (mistakes.Conceptual * 1.5)),
                 Reflective: Math.max(10, overallAccuracy - (mistakes.Careless * 3)), Practical: Math.max(10, overallAccuracy - (mistakes.Practice * 2)),
@@ -277,19 +374,21 @@
             document.getElementById('modalQuizTitle').innerText = `${weakTopic}: ${weakThinking} Focus`;
             document.getElementById('modalQuestionText').innerText = `To improve ${weakThinking.toLowerCase()} thinking in ${weakTopic}, how should you approach complex problems?`;
 
+            // Smart Logic Insights
             const fList = document.getElementById('smartFeedbackList');
             if(overallAccuracy < 100) {
                 if (mistakes.Careless > mistakes.Conceptual) fList.innerHTML += `<li><i class="fas fa-exclamation-triangle text-amber-500 mr-2"></i> You lose points to <strong class="text-rose-500">careless mistakes</strong>. Indicates rushing.</li>`;
                 if (mistakes.Conceptual > 0) fList.innerHTML += `<li><i class="fas fa-book-open text-blue-500 mr-2"></i> Struggling with <strong class="text-blue-600">core concepts</strong> in ${weakTopic}. Re-learn rules.</li>`;
             } else { fList.innerHTML = `<li><i class="fas fa-star text-yellow-500 mr-2"></i> Perfect accuracy.</li>`; }
 
+            // CHARTS INITIALIZATION
             if (typeof Chart !== 'undefined') {
                 new Chart(document.getElementById('historyChart').getContext('2d'), { type: 'line', data: { labels: labels, datasets: [{ label: 'Score %', data: progressHistory, borderColor: '#4f46e5', tension: 0.4, fill: true, backgroundColor: 'rgba(79, 70, 229, 0.1)' }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: {display: false} } }});
                 new Chart(document.getElementById('radarChart').getContext('2d'), { type: 'radar', data: { labels: Object.keys(cogScores), datasets: [{ data: Object.values(cogScores), backgroundColor: 'rgba(99, 102, 241, 0.3)', borderColor: '#4f46e5' }] }, options: { responsive: true, maintainAspectRatio: false, scales: { r: { min: 0, max: 100 } }, plugins: { legend: { display: false } } }});
                 new Chart(document.getElementById('errorPieChart').getContext('2d'), { type: 'doughnut', data: { labels: ['Concept', 'Careless', 'Practice', 'Time'], datasets: [{ data: [mistakes.Conceptual, mistakes.Careless, mistakes.Practice, mistakes.Time], backgroundColor: ['#ef4444', '#f59e0b', '#3b82f6', '#8b5cf6'], borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '70%' }});
                 
                 let sTop = Object.entries(topics).sort((a,b) => b[1] - a[1]);
-                if(sTop.length > 0) new Chart(document.getElementById('topicBarChart').getContext('2d'), { type: 'bar', data: { labels: sTop.map(t=>t[0]), datasets: [{ data: sTop.map(t=>t[1]), backgroundColor: '#0ea5e9' }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }});
+                if(sTop.length > 0) new Chart(document.getElementById('topicBarChart').getContext('2d'), { type: 'bar', data: { labels: sTop.map(t=>t[0]), datasets: [{ data: sTop.map(t=>t[1]), backgroundColor: '#0ea5e9', borderRadius: 6 }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: {stepSize: 1} } }, plugins: { legend: { display: false } } }});
             }
         }
     </script>
