@@ -50,11 +50,11 @@
                 <div class="grid grid-cols-2 gap-4 mb-6">
                     <div>
                         <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Student Name</label>
-                        <input type="text" id="globalStudent" class="input-field" value="Obed Ganta">
+                        <input type="text" id="globalStudent" class="input-field" value="OBED GANTA">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Subject</label>
-                        <input type="text" id="globalSubject" class="input-field" placeholder="e.g. Mathematics">
+                        <input type="text" id="globalSubject" class="input-field" placeholder="e.g. Mathematics" value="Science & Math Exam">
                     </div>
                 </div>
 
@@ -103,6 +103,46 @@
         
         let uploadedFiles = [];
 
+        // Exact Demo Data for your presentation!
+        const demoAnalysisData = [
+            {
+                topic: "Physics - Energy",
+                question: "Calculate the Kinetic Energy of a 4kg object moving at 3 m/s.",
+                correct: "18 Joules",
+                student: "6 Joules",
+                mistake: "Conceptual",
+                guessed: false,
+                steps: "Concept Error: Used KE = 1/2*m*v instead of KE = 1/2*m*v². Failed to square the velocity."
+            },
+            {
+                topic: "Geometry",
+                question: "Find the hypotenuse (c) of a right triangle where side a = 6 and side b = 8.",
+                correct: "10",
+                student: "50",
+                mistake: "Careless",
+                guessed: false,
+                steps: "Careless Error: Correctly calculated c² = 100, but divided by 2 instead of taking the square root."
+            },
+            {
+                topic: "Algebra",
+                question: "Solve for x: 2(x + 3) = 14",
+                correct: "4",
+                student: "5.5",
+                mistake: "Conceptual",
+                guessed: false,
+                steps: "Failed to distribute the 2 to the 3. Wrote 2x + 3 = 14 instead of 2x + 6 = 14."
+            },
+            {
+                topic: "Calculus",
+                question: "Evaluate the integral of x*sin(x) dx.",
+                correct: "-x*cos(x) + sin(x) + C",
+                student: "-x*cos(x) + sin(x) + C",
+                mistake: "None",
+                guessed: false,
+                steps: "Perfect execution of integration by parts."
+            }
+        ];
+
         // Drag & Drop Handlers
         dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
         dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
@@ -127,25 +167,30 @@
             }, 2500);
         }
 
-        // Generate the beautiful verification cards
+        // Generate the beautiful verification cards using our specific Demo Data
         function generateCards() {
             cardsContainer.innerHTML = ''; 
-            const defaultTopics = ["Calculus", "Algebra", "Geometry"];
             
             uploadedFiles.forEach((file, index) => {
                 const imageUrl = URL.createObjectURL(file);
-                const isError = Math.random() > 0.4; // Simulate AI finding mistakes
-                const topic = defaultTopics[Math.floor(Math.random() * defaultTopics.length)];
+                
+                // Pull from our exact list, or use a default if they upload more than 4 images
+                const aiData = demoAnalysisData[index] || {
+                    topic: "General Math", question: "Solve the equation.", correct: "100", student: "85", mistake: "Practice", guessed: true, steps: "Needs more practice on fundamental concepts."
+                };
 
-                addCardHTML(imageUrl, index + 1, topic, isError);
+                addCardHTML(imageUrl, index + 1, aiData);
             });
         }
 
         function addBlankCard() {
-            addCardHTML('', document.querySelectorAll('.q-card').length + 1, '', true, true);
+            const blankData = { topic: "", question: "", correct: "", student: "", mistake: "None", guessed: false, steps: "" };
+            addCardHTML('', document.querySelectorAll('.q-card').length + 1, blankData, true);
         }
 
-        function addCardHTML(imageUrl, qNum, topic, isError, isBlank = false) {
+        function addCardHTML(imageUrl, qNum, data, isBlank = false) {
+            const isError = data.mistake !== 'None';
+            
             const cardHTML = `
                 <div class="q-card glass-panel p-6 flex flex-col md:flex-row gap-6 relative">
                     ${imageUrl ? `<div class="w-full md:w-1/4 flex flex-col items-center justify-center bg-gray-50 rounded-xl border border-gray-200 p-2 relative overflow-hidden group">
@@ -156,22 +201,22 @@
                     <div class="w-full ${imageUrl ? 'md:w-3/4' : 'md:w-3/4'} space-y-4">
                         <div>
                             <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Topic</label>
-                            <input type="text" class="card-topic input-field" value="${topic}" placeholder="e.g. Calculus">
+                            <input type="text" class="card-topic input-field" value="${data.topic}" placeholder="e.g. Calculus">
                         </div>
                         
                         <div>
                             <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Extracted Question</label>
-                            <textarea class="card-question input-field text-sm" rows="1" placeholder="Type the question here...">${isBlank ? '' : 'Solve for X based on the handwritten equation.'}</textarea>
+                            <textarea class="card-question input-field text-sm" rows="1" placeholder="Type the question here...">${data.question}</textarea>
                         </div>
 
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Correct Ans</label>
-                                <input type="text" class="card-correct input-field" value="${isBlank ? '' : '42'}">
+                                <input type="text" class="card-correct input-field" value="${data.correct}">
                             </div>
                             <div>
                                 <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Student Ans</label>
-                                <input type="text" class="card-student input-field" value="${isBlank ? '' : (isError ? '24' : '42')}">
+                                <input type="text" class="card-student input-field" value="${data.student}">
                             </div>
                         </div>
 
@@ -180,20 +225,20 @@
                             
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-3">
                                 <select class="card-mistake input-field bg-white font-bold ${isError ? 'text-red-600 border-red-300' : 'text-green-600 border-green-300'}" onchange="this.className = this.value === 'None' ? 'card-mistake input-field bg-white font-bold text-green-600 border-green-300' : 'card-mistake input-field bg-white font-bold text-red-600 border-red-300'">
-                                    <option value="None" ${!isError ? 'selected' : ''}>No Mistake (Correct)</option>
-                                    <option value="Conceptual" ${isError ? 'selected' : ''}>Conceptual Error</option>
-                                    <option value="Careless">Careless Mistake</option>
-                                    <option value="Practice">Lack of Practice</option>
-                                    <option value="Time">Time Issue</option>
+                                    <option value="None" ${data.mistake === 'None' ? 'selected' : ''}>No Mistake (Correct)</option>
+                                    <option value="Conceptual" ${data.mistake === 'Conceptual' ? 'selected' : ''}>Conceptual Error</option>
+                                    <option value="Careless" ${data.mistake === 'Careless' ? 'selected' : ''}>Careless Mistake</option>
+                                    <option value="Practice" ${data.mistake === 'Practice' ? 'selected' : ''}>Lack of Practice</option>
+                                    <option value="Time" ${data.mistake === 'Time' ? 'selected' : ''}>Time Issue</option>
                                 </select>
                                 
                                 <div class="flex items-center gap-2 bg-white px-3 py-2 border rounded-lg">
-                                    <input type="checkbox" class="card-guessed w-4 h-4 accent-indigo-600 cursor-pointer">
+                                    <input type="checkbox" class="card-guessed w-4 h-4 accent-indigo-600 cursor-pointer" ${data.guessed ? 'checked' : ''}>
                                     <label class="text-sm font-semibold text-gray-700 cursor-pointer">Answer guessed?</label>
                                 </div>
                             </div>
                             
-                            <textarea class="card-steps input-field bg-white text-sm" rows="1" placeholder="Enter solution steps or specific feedback here...">${isBlank ? '' : (isError ? 'Applied formula incorrectly.' : 'Perfect logic.')}</textarea>
+                            <textarea class="card-steps input-field bg-white text-sm" rows="1" placeholder="Enter solution steps or specific feedback here...">${data.steps}</textarea>
                         </div>
                     </div>
                     <button type="button" onclick="this.closest('.q-card').remove()" class="absolute top-4 right-4 text-gray-300 hover:text-red-500 transition"><i class="fas fa-times"></i></button>
