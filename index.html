@@ -3,182 +3,275 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Results - Smart Logic</title>
+    <title>Dashboard - EduMetrics</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #ffffff; color: #111827; }
-        .box { border: 1px solid #e5e7eb; border-radius: 12px; padding: 1.5rem; background: #ffffff; }
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #1f2937; }
+        aside { background: linear-gradient(180deg, #ffffff 0%, #f9fafb 100%); }
+        .nav-item.active { background-color: #eef2ff; color: #4f46e5; }
+        .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.03); border: 1px solid rgba(255, 255, 255, 0.8); }
+        
+        .tab-btn { border-bottom: 3px solid transparent; transition: all 0.2s; padding-bottom: 0.5rem; }
+        .tab-btn.active { border-bottom-color: #4f46e5; color: #4f46e5; font-weight: 800; }
+        .tab-content { display: none; animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
-<body class="p-8 max-w-5xl mx-auto">
+<body class="flex h-screen overflow-hidden">
 
-    <div class="flex justify-between items-end mb-8 border-b pb-4">
-        <div>
-            <h1 class="text-3xl font-bold tracking-tight">Performance Results</h1>
-            <p class="text-gray-500 mt-1" id="testCountText">Based on past 0 tests...</p>
+    <aside class="w-64 border-r border-gray-200 flex flex-col shadow-sm z-10 relative bg-white">
+        <div class="p-6 border-b border-gray-100 flex items-center justify-center">
+            <div class="w-10 h-10 bg-gradient-to-br from-green-400 to-blue-500 rounded-lg flex items-center justify-center mr-3 shadow-md text-white font-bold text-xl">E</div>
+            <h1 class="text-2xl font-black text-gray-800 tracking-tight">Edu<span class="text-green-500">Metrics</span></h1>
         </div>
-        <a href="input.html" class="bg-black text-white px-5 py-2 rounded-lg font-semibold hover:bg-gray-800 transition">+ New Entry</a>
-    </div>
+        <nav class="flex-1 mt-6 space-y-2 px-4">
+            <a href="index.html" class="nav-item active flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition"><i class="fas fa-chart-pie w-5 text-center text-indigo-500"></i> Dashboard</a>
+            <a href="teacher.html" class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-gray-500 transition"><i class="fas fa-camera w-5 text-center"></i> AI Scanner</a>
+            <a href="premium.html" class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-gray-500 transition"><i class="fas fa-compass w-5 text-center text-amber-400"></i> Career Guidance</a>
+        </nav>
+        <button onclick="clearData()" class="m-4 text-xs font-bold text-red-500 p-3 rounded-xl border border-red-100 hover:bg-red-50 transition"><i class="fas fa-trash"></i> Reset System Data</button>
+    </aside>
 
-    <!-- SECTION 1: SUMMARY BOX -->
-    <div class="grid grid-cols-3 gap-6 mb-8">
-        <div class="box bg-gray-50">
-            <p class="text-sm text-gray-500 font-semibold uppercase">Total Questions</p>
-            <h2 id="totQ" class="text-4xl font-black mt-1">0</h2>
-        </div>
-        <div class="box bg-gray-50">
-            <p class="text-sm text-gray-500 font-semibold uppercase">Correct Answers</p>
-            <h2 id="totC" class="text-4xl font-black mt-1">0</h2>
-        </div>
-        <div class="box bg-gray-50">
-            <p class="text-sm text-gray-500 font-semibold uppercase">Main Weakness</p>
-            <h2 id="mainW" class="text-xl font-bold mt-2 text-red-600">--</h2>
-        </div>
-    </div>
+    <main class="flex-1 overflow-y-auto p-8 lg:p-10 relative">
+        <div class="max-w-6xl mx-auto">
+            
+            <header class="mb-8">
+                <h2 class="text-4xl font-black tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-blue-500">Performance Diagnostics</h2>
+                <p class="text-gray-500 mt-1 font-medium">Question-by-Question Deep Analysis.</p>
+            </header>
 
-    <!-- SECTION 2: SMART FEEDBACK & SUGGESTIONS -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        <div class="box border-l-4 border-black">
-            <h3 class="font-bold mb-3 flex items-center gap-2">🧠 Smart Feedback</h3>
-            <ul id="smartFeedbackList" class="space-y-2 text-gray-700 font-medium">
-                <!-- Generated by JS logic -->
-            </ul>
+            <!-- TABS -->
+            <div class="flex gap-8 border-b border-gray-200 mb-8" id="tabsArea">
+                <button onclick="switchTab('tab-overview')" id="btn-overview" class="tab-btn active text-lg font-semibold text-gray-500">Overview</button>
+                <button onclick="switchTab('tab-details')" id="btn-details" class="tab-btn text-lg font-semibold text-gray-500 flex items-center gap-2">Recent Test Details <span class="bg-indigo-100 text-indigo-700 text-[10px] px-2 py-0.5 rounded-full font-black">Q-by-Q</span></button>
+                <button onclick="switchTab('tab-analysis')" id="btn-analysis" class="tab-btn text-lg font-semibold text-gray-500">Error Breakdown</button>
+            </div>
+
+            <div id="emptyState" class="hidden text-center py-24 glass-card border-dashed border-2 border-gray-300">
+                <div class="w-20 h-20 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-4"><i class="fas fa-camera-retro text-3xl text-indigo-300"></i></div>
+                <h3 class="text-xl font-bold text-gray-800 mb-2">No Scans Found</h3>
+                <p class="text-gray-500 mb-6">Head to the AI Scanner to upload your first batch of answer sheets.</p>
+                <a href="teacher.html" class="inline-block bg-indigo-600 text-white font-bold px-6 py-3 rounded-xl shadow-md hover:bg-indigo-700 transition">Go to Scanner</a>
+            </div>
+
+            <div id="dataContainer" class="hidden">
+                
+                <!-- TAB 1: OVERVIEW & SMART FEEDBACK -->
+                <div id="tab-overview" class="tab-content active">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                        <div class="glass-card p-6 border-t-4 border-indigo-500 relative overflow-hidden">
+                            <div class="absolute -right-4 -top-4 w-24 h-24 bg-indigo-50 rounded-full opacity-50"></div>
+                            <p class="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Overall Accuracy</p>
+                            <h2 id="avgScore" class="text-5xl font-black text-gray-800">--%</h2>
+                        </div>
+                        <div class="glass-card p-6 border-t-4 border-emerald-500 relative overflow-hidden">
+                            <div class="absolute -right-4 -top-4 w-24 h-24 bg-emerald-50 rounded-full opacity-50"></div>
+                            <p class="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Total Questions Scanned</p>
+                            <h2 id="totQ" class="text-5xl font-black text-gray-800">--</h2>
+                        </div>
+                        <div class="glass-card p-6 border-t-4 border-rose-500 relative overflow-hidden">
+                            <div class="absolute -right-4 -top-4 w-24 h-24 bg-rose-50 rounded-full opacity-50"></div>
+                            <p class="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Core Weakness</p>
+                            <h2 id="mainW" class="text-2xl font-black text-rose-600 mt-2 leading-tight">--</h2>
+                        </div>
+                    </div>
+
+                    <!-- Smart Logic Feedbacks -->
+                    <div class="glass-card p-8 mb-8 bg-gradient-to-br from-white to-indigo-50">
+                        <h3 class="font-black text-gray-800 text-xl mb-4 flex items-center gap-2"><i class="fas fa-brain text-indigo-500"></i> AI Smart Insights</h3>
+                        <ul id="smartFeedbackList" class="space-y-3 text-gray-700 font-medium text-lg border-l-4 border-indigo-400 pl-4">
+                            <!-- Populated by JS -->
+                        </ul>
+                    </div>
+
+                    <div class="glass-card p-6">
+                        <h3 class="font-bold text-gray-800 text-lg mb-4">Accuracy Trend</h3>
+                        <div class="relative h-64"><canvas id="historyChart"></canvas></div>
+                    </div>
+                </div>
+
+                <!-- TAB 2: QUESTION BY QUESTION (RECENT TEST) -->
+                <div id="tab-details" class="tab-content">
+                    <div class="flex justify-between items-end mb-6">
+                        <div>
+                            <h3 class="text-2xl font-black text-gray-800" id="recentTestSubj">Subject: --</h3>
+                            <p class="text-gray-500 font-medium" id="recentTestDate">Scanned on: --</p>
+                        </div>
+                        <div class="text-right">
+                            <span class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Score</span>
+                            <span class="text-3xl font-black text-indigo-600" id="recentTestScore">--%</span>
+                        </div>
+                    </div>
+
+                    <div id="qLogContainer" class="space-y-4">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- TAB 3: AGGREGATE ANALYSIS (PIE CHART) -->
+                <div id="tab-analysis" class="tab-content">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <div class="glass-card p-8">
+                            <h3 class="font-black text-gray-800 text-xl mb-2">Error Typology</h3>
+                            <p class="text-sm text-gray-500 mb-6 font-medium">Distribution of mistakes across all scanned tests.</p>
+                            <div class="relative h-72"><canvas id="errorPieChart"></canvas></div>
+                        </div>
+                        <div class="glass-card p-8">
+                            <h3 class="font-black text-gray-800 text-xl mb-2">Problematic Topics</h3>
+                            <p class="text-sm text-gray-500 mb-6 font-medium">Sub-topics generating the most errors.</p>
+                            <ul id="weakTopicsList" class="space-y-3">
+                                <!-- Populated by JS -->
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="box border-l-4 border-black">
-            <h3 class="font-bold mb-3 flex items-center gap-2">🧘 Suggestions & Stress</h3>
-            <p id="practiceSuggestion" class="text-gray-700 font-medium mb-3">Recommended: Take a test to generate suggestions.</p>
-            <p id="stressIndicator" class="text-sm text-gray-500 italic"></p>
-        </div>
-    </div>
-
-    <!-- SECTION 3: LATEST THINKING ANALYSIS -->
-    <div class="box mb-8 bg-gray-50" id="thinkingAnalysisArea">
-        <h3 class="font-bold mb-4">Section 4: Thinking Analysis (Latest Question)</h3>
-        <div id="latestAnalysisContent" class="text-gray-700">No data yet.</div>
-    </div>
-
-    <!-- SECTION 4: CHARTS -->
-    <h3 class="font-bold text-xl mb-4">Section 2: Visual Charts</h3>
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div class="box"><h4 class="font-semibold text-sm mb-4 text-center">Mistake Types</h4><canvas id="pieChart"></canvas></div>
-        <div class="box"><h4 class="font-semibold text-sm mb-4 text-center">Weak Topics</h4><canvas id="barChart"></canvas></div>
-        <div class="box"><h4 class="font-semibold text-sm mb-4 text-center">Progress (Accuracy)</h4><canvas id="lineChart"></canvas></div>
-    </div>
-
-    <button onclick="clearData()" class="text-red-500 text-sm hover:underline">Clear All Data</button>
+    </main>
 
     <script>
-        function clearData() { if(confirm("Clear data?")) { localStorage.removeItem('smartLogicData'); location.reload(); } }
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            document.getElementById('btn-' + tabId.split('-')[1]).classList.add('active');
+        }
 
-        const data = JSON.parse(localStorage.getItem('smartLogicData')) || [];
+        function clearData() {
+            if(confirm("Permanently delete all scanned data?")) { localStorage.removeItem('eduMetricsV3'); location.reload(); }
+        }
 
-        if (data.length > 0) {
-            document.getElementById('testCountText').innerText = `Based on past ${data.length} tests...`;
-            
-            let totalQ = data.length;
-            let correctCount = 0;
+        // USING THE V3 DATA KEY
+        let historyData = JSON.parse(localStorage.getItem('eduMetricsV3')) || [];
+        Chart.defaults.font.family = "'Inter', sans-serif";
+
+        if(historyData.length === 0) {
+            document.getElementById('emptyState').classList.remove('hidden');
+        } else {
+            document.getElementById('dataContainer').classList.remove('hidden');
+
+            let totalQ = 0, correctQ = 0;
             let mistakes = { Conceptual: 0, Careless: 0, Practice: 0, Time: 0 };
             let topics = {};
-            let progressHistory = []; // Track correct vs total over time (simulated by groups of 1)
-            
-            data.forEach((item, index) => {
-                if (item.is_correct) correctCount++;
-                if (item.mistake_type !== 'None') {
-                    mistakes[item.mistake_type]++;
-                    topics[item.topic] = (topics[item.topic] || 0) + 1;
-                }
-                // Simple progress calculation (cumulative accuracy)
-                progressHistory.push( Math.round((correctCount / (index + 1)) * 100) );
+            let progressHistory = [];
+            let labels = [];
+
+            // Aggregate Data across all tests and questions
+            historyData.forEach((test, tIndex) => {
+                labels.push(`Test ${tIndex + 1}`);
+                progressHistory.push(test.score);
+
+                test.questions.forEach(q => {
+                    totalQ++;
+                    if(q.isCorrect) correctQ++;
+                    else {
+                        if(mistakes[q.mistakeType] !== undefined) mistakes[q.mistakeType]++;
+                        topics[q.topic] = (topics[q.topic] || 0) + 1;
+                    }
+                });
             });
 
-            // Update Summary Box
+            // TAB 1: OVERVIEW KPIs
+            document.getElementById('avgScore').innerText = Math.round((correctQ / totalQ) * 100) + '%';
             document.getElementById('totQ').innerText = totalQ;
-            document.getElementById('totC').innerText = correctCount;
 
-            // Find Main Weakness
-            let mainWeakness = "None";
-            let maxMistakes = 0;
-            for (const [key, value] of Object.entries(mistakes)) {
-                if (value > maxMistakes) { maxMistakes = value; mainWeakness = key; }
-            }
-            if (maxMistakes > 0) {
-                document.getElementById('mainW').innerText = `Mostly ${mainWeakness} Errors`;
-            }
+            let mainWeakness = "None"; let maxM = 0;
+            Object.entries(mistakes).forEach(([key, val]) => { if(val > maxM) { maxM = val; mainWeakness = key; } });
+            document.getElementById('mainW').innerText = maxM > 0 ? `${mainWeakness} Errors` : "Perfect!";
 
-            // --- THE "VERY IMPORTANT" LOGIC RULES ---
+            // Smart Logic Insights
             const feedbackList = document.getElementById('smartFeedbackList');
-            
-            // Rule 1: Careless
             if (mistakes.Careless > mistakes.Conceptual && mistakes.Careless > 0) {
-                feedbackList.innerHTML += `<li>• "You understand concepts but make careless mistakes."</li>`;
+                feedbackList.innerHTML += `<li>You grasp the core concepts well, but are losing points to <strong class="text-rose-500">careless mistakes</strong>. Focus on reviewing your work.</li>`;
+            }
+            if (mistakes.Time > 0) {
+                feedbackList.innerHTML += `<li><strong class="text-rose-500">Time management</strong> is impacting your score. Consider timed practice sessions.</li>`;
             }
             
-            // Rule 2: Time Issue
-            if (mistakes.Time >= 2) { // Adjusted from 3 to 2 so it triggers earlier for testing
-                feedbackList.innerHTML += `<li>• "Time management needs improvement."</li>`;
+            // Guessed check (Look through all questions)
+            let guessedRight = 0;
+            historyData.forEach(t => t.questions.forEach(q => { if(q.isCorrect && q.guessed) guessedRight++; }));
+            if(guessedRight > 0) {
+                feedbackList.innerHTML += `<li><strong class="text-amber-500">Weak foundation detected.</strong> You successfully guessed ${guessedRight} answers, inflating your accuracy. Review core material.</li>`;
             }
 
-            // Rule 3: Weak Understanding (Guessed but Correct)
-            const guessedRight = data.filter(d => d.is_correct && d.guessed).length;
-            if (guessedRight > 0) {
-                feedbackList.innerHTML += `<li>• "Weak understanding detected (Correct answers were guessed)."</li>`;
-            }
+            if(feedbackList.innerHTML === "") feedbackList.innerHTML = "<li>Keep practicing! We are gathering more data to build your cognitive profile.</li>";
 
-            // If no specific feedback triggered
-            if(feedbackList.innerHTML === "") feedbackList.innerHTML = "<li>• Keep practicing! Gathering more data to find patterns.</li>";
+            // TAB 2: RECENT TEST QUESTION-BY-QUESTION
+            const latestTest = historyData[historyData.length - 1];
+            document.getElementById('recentTestSubj').innerText = `Subject: ${latestTest.subject}`;
+            document.getElementById('recentTestDate').innerText = `Scanned on: ${new Date(latestTest.date).toLocaleDateString()}`;
+            document.getElementById('recentTestScore').innerText = `${latestTest.score}%`;
 
-            // Practice Suggestion & Stress Rule
-            let weakTopic = Object.keys(topics).reduce((a, b) => topics[a] > topics[b] ? a : b, "");
-            if (weakTopic) {
-                document.getElementById('practiceSuggestion').innerText = `"Recommended: Practice more questions from ${weakTopic}"`;
-            }
+            const qLogContainer = document.getElementById('qLogContainer');
+            latestTest.questions.forEach(q => {
+                const isCorr = q.isCorrect;
+                const statusColor = isCorr ? 'text-emerald-600 bg-emerald-50 border-emerald-200' : 'text-rose-600 bg-rose-50 border-rose-200';
+                const statusIcon = isCorr ? '<i class="fas fa-check-circle"></i> Correct' : '<i class="fas fa-times-circle"></i> Incorrect';
+                
+                // Smart suggestion per question
+                let qSuggestion = "Excellent logic.";
+                if(!isCorr) qSuggestion = `Suggestion: Focus on fixing ${q.mistakeType.toLowerCase()} issues in ${q.topic}.`;
+                if(isCorr && q.guessed) qSuggestion = "Warning: Answer was guessed. Revise this concept.";
 
-            // Subtle Stress Indicator Rule
-            if ((mistakes.Careless + mistakes.Time) >= 3) {
-                document.getElementById('stressIndicator').innerText = `"Frequent careless/time mistakes detected. Consider guidance."`;
-            }
-
-            // --- THINKING ANALYSIS (Latest Entry) ---
-            const latest = data[data.length - 1];
-            let analysisHTML = "";
-            if (latest.is_correct) {
-                if (latest.guessed) {
-                    analysisHTML = `<p class="text-green-600 font-bold">☑ Answer Correct (But Guessed)</p>
-                                    <p class="mt-1">⚠️ Logic Issue Detected</p>
-                                    <p class="mt-2 font-semibold">Suggestion: "Revise core concept behind this question"</p>`;
-                } else {
-                    analysisHTML = `<p class="text-green-600 font-bold">☑ Answer Correct</p>
-                                    <p class="mt-2 font-semibold">Suggestion: "Great logic. Keep it up!"</p>`;
-                }
-            } else {
-                analysisHTML = `<p class="text-red-600 font-bold">❌ Answer Wrong</p>
-                                <p class="mt-1">🔍 Mistake Type: ${latest.mistake_type}</p>
-                                <p class="mt-2 font-semibold">Suggestion: "Focus on understanding basics of ${latest.topic}"</p>`;
-            }
-            document.getElementById('latestAnalysisContent').innerHTML = analysisHTML;
-
-            // --- CHARTS ---
-            // Pie Chart (Mistakes)
-            new Chart(document.getElementById('pieChart'), {
-                type: 'pie',
-                data: { labels: ['Conceptual', 'Careless', 'Practice', 'Time'], datasets: [{ data: [mistakes.Conceptual, mistakes.Careless, mistakes.Practice, mistakes.Time], backgroundColor: ['#ef4444', '#f59e0b', '#3b82f6', '#8b5cf6'] }] },
-                options: { plugins: { legend: { position: 'bottom', labels: { boxWidth: 12 } } } }
+                const cardHtml = `
+                    <div class="glass-card p-6 border-l-4 ${isCorr ? 'border-emerald-500' : 'border-rose-500'}">
+                        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-2">
+                            <div class="flex items-center gap-3">
+                                <span class="bg-gray-100 text-gray-600 font-black px-3 py-1 rounded-lg text-sm">Q${q.qNum}</span>
+                                <span class="font-bold text-gray-700">${q.topic}</span>
+                            </div>
+                            <div class="px-3 py-1 rounded-full text-xs font-bold border ${statusColor}">
+                                ${statusIcon} ${q.guessed ? '(Guessed)' : ''}
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 text-sm">
+                            <div class="bg-gray-50 p-3 rounded-xl border border-gray-100">
+                                <span class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Student Wrote</span>
+                                <span class="font-semibold text-gray-800">${q.studentAns || 'N/A'}</span>
+                            </div>
+                            <div class="bg-gray-50 p-3 rounded-xl border border-gray-100">
+                                <span class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Correct Answer</span>
+                                <span class="font-semibold text-gray-800">${q.correctAns || 'N/A'}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-indigo-50/50 p-4 rounded-xl border border-indigo-100 text-sm">
+                            <span class="block text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-1">AI Diagnosis & Steps</span>
+                            <p class="text-gray-700 font-medium mb-1">${q.steps}</p>
+                            <p class="text-indigo-700 font-semibold text-xs mt-2">${qSuggestion}</p>
+                        </div>
+                    </div>
+                `;
+                qLogContainer.insertAdjacentHTML('beforeend', cardHtml);
             });
 
-            // Bar Chart (Topics)
-            new Chart(document.getElementById('barChart'), {
-                type: 'bar',
-                data: { labels: Object.keys(topics), datasets: [{ label: 'Mistakes', data: Object.values(topics), backgroundColor: '#000000' }] },
-                options: { scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }, plugins: { legend: { display: false } } }
+            // TAB 3: ANALYSIS
+            let sortedTopics = Object.entries(topics).sort((a,b) => b[1] - a[1]);
+            let listHtml = '';
+            sortedTopics.forEach(t => {
+                listHtml += `<li class="flex justify-between items-center p-4 bg-gray-50 rounded-xl border border-gray-100"><span class="font-bold text-gray-700">${t[0]}</span> <span class="bg-rose-100 text-rose-700 px-3 py-1 rounded-full text-xs font-bold">${t[1]} Mistakes</span></li>`;
+            });
+            document.getElementById('weakTopicsList').innerHTML = listHtml || '<li class="text-gray-400 p-4 text-center">No mistakes recorded!</li>';
+
+            // CHARTS
+            new Chart(document.getElementById('historyChart').getContext('2d'), { 
+                type: 'line', 
+                data: { labels: labels, datasets: [{ label: 'Score %', data: progressHistory, borderColor: '#4f46e5', tension: 0.3, fill: true, backgroundColor: 'rgba(79, 70, 229, 0.1)', borderWidth: 3 }] },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { min: 0, max: 100 } } }
             });
 
-            // Line Chart (Progress)
-            let testLabels = data.map((_, i) => `T${i+1}`);
-            new Chart(document.getElementById('lineChart'), {
-                type: 'line',
-                data: { labels: testLabels, datasets: [{ label: 'Cumulative Accuracy %', data: progressHistory, borderColor: '#000000', tension: 0.1 }] },
-                options: { scales: { y: { min: 0, max: 100 } }, plugins: { legend: { display: false } } }
+            new Chart(document.getElementById('errorPieChart').getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Conceptual', 'Careless', 'Lack of Practice', 'Time Issue'],
+                    datasets: [{ data: [mistakes.Conceptual, mistakes.Careless, mistakes.Practice, mistakes.Time], backgroundColor: ['#ef4444', '#f59e0b', '#3b82f6', '#8b5cf6'], borderWidth: 0 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { position: 'right' } } }
             });
         }
     </script>
