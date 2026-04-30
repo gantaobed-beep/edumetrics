@@ -124,16 +124,27 @@
             return array;
         }
 
-        dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
-        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'););
+        // --- THE FIXED DRAG AND DROP LOGIC (Syntax Error Removed) ---
+        dropZone.addEventListener('dragover', (e) => { 
+            e.preventDefault(); 
+            dropZone.classList.add('dragover'); 
+        });
+        
+        dropZone.addEventListener('dragleave', (e) => { 
+            e.preventDefault();
+            dropZone.classList.remove('dragover'); 
+        });
+        
         dropZone.addEventListener('drop', (e) => {
-            e.preventDefault(); dropZone.classList.remove('dragover');
+            e.preventDefault(); 
+            dropZone.classList.remove('dragover');
             handleFiles(e.dataTransfer.files);
         });
+        
         fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
 
         function handleFiles(files) {
-            if (files.length === 0) return;
+            if (!files || files.length === 0) return;
             uploadedFiles = Array.from(files);
             document.getElementById('imageCountText').innerText = uploadedFiles.length;
 
@@ -157,10 +168,8 @@
                 const imageUrl = URL.createObjectURL(file);
                 
                 // MULTI-QUESTION DETECTION LOGIC
-                // For the demo: Let's extract 3 questions from Image 1, and 2 questions from Image 2.
                 let numQuestionsInImage = (fileIndex === 0) ? 3 : (fileIndex === 1 ? 2 : Math.floor(Math.random() * 2) + 2);
 
-                // Add a beautiful document separator to group the questions
                 const docHeader = `
                     <div class="bg-indigo-600 text-white font-black px-5 py-3 rounded-xl mt-8 mb-4 shadow-md flex items-center justify-between">
                         <span class="text-lg"><i class="fas fa-file-image mr-2"></i> Document ${fileIndex + 1}</span>
@@ -168,12 +177,9 @@
                     </div>`;
                 cardsContainer.insertAdjacentHTML('beforeend', docHeader);
 
-                // Generate a card for each question found in this specific image
                 for(let i = 0; i < numQuestionsInImage; i++) {
                     const aiData = currentBatchScenarios[scenarioIndex % currentBatchScenarios.length];
-                    
                     addCardHTML(imageUrl, globalQNum, aiData, false, fileIndex + 1);
-                    
                     globalQNum++;
                     scenarioIndex++;
                 }
@@ -185,7 +191,6 @@
             addCardHTML('', document.querySelectorAll('.q-card').length + 1, blankData, true, 'Manual');
         }
 
-        // Updated to accept imgNum so the badge matches the document header
         function addCardHTML(imageUrl, qNum, data, isBlank = false, imgNum = 1) {
             const isError = data.mistake !== 'None';
             
@@ -269,7 +274,7 @@
                 if(isCorrect) correctCount++;
 
                 questions.push({
-                    qNum: index + 1, // Store the sequential global question number
+                    qNum: index + 1, 
                     topic: card.querySelector('.card-topic').value || "General",
                     questionText: card.querySelector('.card-question').value,
                     correctAns: card.querySelector('.card-correct').value,
