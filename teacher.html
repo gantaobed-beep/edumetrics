@@ -11,9 +11,6 @@
         aside { background: linear-gradient(180deg, #ffffff 0%, #f9fafb 100%); }
         .nav-item.active { background-color: #eef2ff; color: #4f46e5; }
         .glass-panel { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-radius: 20px; box-shadow: 0 20px 40px -15px rgba(0,0,0,0.1); }
-        .custom-input { width: 100%; padding: 0.75rem 1rem; background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 0.75rem; font-weight: 600; }
-        .upload-zone { border: 2px dashed #a78bfa; transition: all 0.3s; cursor: pointer; }
-        .upload-zone:hover { background-color: #f5f3ff; border-color: #7c3aed; }
         .scanning-laser { width: 100%; height: 2px; background-color: #10b981; position: absolute; top: 0; left: 0; box-shadow: 0 0 10px #10b981; animation: scan 2s linear infinite; }
         @keyframes scan { 0% { top: 0; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
     </style>
@@ -33,103 +30,185 @@
     </aside>
 
     <main class="flex-1 overflow-y-auto p-8 flex items-center justify-center">
-        <div class="glass-panel p-10 w-full max-w-3xl border-t-8 border-t-indigo-500 relative overflow-hidden">
-            <div class="text-center mb-8">
-                <h2 class="text-3xl font-black text-gray-800 tracking-tight">AI Answer Sheet Scanner</h2>
-                <p class="text-gray-500 mt-2">Extracts 8 distinct cognitive thinking types directly from student work.</p>
+        <div class="glass-panel p-8 w-full max-w-4xl border-t-8 border-t-indigo-500 relative">
+            
+            <div class="text-center mb-6">
+                <h2 class="text-3xl font-black text-gray-800">AI Scanner & Verification</h2>
+                <p class="text-gray-500">Scan and verify question-by-question analysis.</p>
             </div>
 
-            <div id="uploadArea" class="upload-zone rounded-2xl p-12 text-center bg-indigo-50" onclick="document.getElementById('fileInput').click()">
-                <i class="fas fa-file-scan text-5xl text-indigo-400 mb-4"></i>
-                <h3 class="text-xl font-bold text-gray-700">Upload Answer Sheet</h3>
-                <input type="file" id="fileInput" class="hidden" accept="image/*,.pdf">
+            <!-- Pre-Scan Context -->
+            <div id="preScan" class="bg-indigo-50 p-6 rounded-xl border border-indigo-100 mb-6 text-center">
+                <label class="block text-sm font-bold text-indigo-800 mb-2">1. Set Subject Context</label>
+                <select id="subjectContext" class="w-full max-w-xs p-3 rounded-lg border border-indigo-200 font-bold text-gray-700 mb-4 mx-auto block">
+                    <option value="Mathematics">Mathematics</option>
+                    <option value="Physics">Physics</option>
+                    <option value="Chemistry">Chemistry</option>
+                    <option value="Biology">Biology</option>
+                    <option value="Computer Science">Computer Science</option>
+                </select>
+                
+                <div class="border-2 dashed border-indigo-300 rounded-xl p-8 bg-white cursor-pointer hover:bg-indigo-50 transition" onclick="document.getElementById('fileInput').click()">
+                    <i class="fas fa-cloud-upload-alt text-4xl text-indigo-400 mb-2"></i>
+                    <h3 class="font-bold text-gray-700">2. Click to Upload Answer Sheet</h3>
+                    <input type="file" id="fileInput" class="hidden" accept="image/*,.pdf">
+                </div>
             </div>
 
-            <div id="scanningState" class="hidden relative h-48 bg-gray-100 rounded-xl flex items-center justify-center border border-gray-200">
+            <!-- Scanning State -->
+            <div id="scanningState" class="hidden relative h-48 bg-gray-100 rounded-xl flex items-center justify-center border border-gray-200 mb-6">
                 <div class="scanning-laser"></div>
                 <div class="text-center">
                     <i class="fas fa-microchip text-4xl text-green-500 mb-3 animate-pulse"></i>
-                    <p class="font-bold text-gray-600">Extracting 8-Point Cognitive Profile...</p>
+                    <p class="font-bold text-gray-600">AI reading handwriting & analyzing errors...</p>
                 </div>
             </div>
 
-            <form id="uploadForm" class="hidden space-y-6 mt-6">
-                <div class="bg-green-50 text-green-700 p-3 rounded-lg border border-green-200 text-sm font-bold flex items-center">
-                    <i class="fas fa-check-circle mr-2"></i> Scan Complete! Review extracted metrics.
+            <!-- Verification Table -->
+            <div id="verificationState" class="hidden">
+                <div class="bg-amber-50 text-amber-800 p-3 rounded-lg border border-amber-200 text-sm font-bold flex items-center mb-4">
+                    <i class="fas fa-exclamation-triangle mr-2"></i> AI Extracted Data. Please verify question breakdowns before saving.
                 </div>
                 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Topic</label><input type="text" id="topic" class="custom-input" required></div>
-                    <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Score (%)</label><input type="number" id="score" class="custom-input" required></div>
-                    <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Duration (Mins)</label><input type="number" id="time" class="custom-input" required></div>
-                    <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Concept Errors</label><input type="number" id="concept" class="custom-input" required></div>
-                    <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Careless Mistakes</label><input type="number" id="careless" class="custom-input" required></div>
-                    <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Stress (1-10)</label><input type="number" id="stress" class="custom-input" required></div>
+                <div class="flex justify-between items-end mb-2">
+                    <div>
+                        <span class="text-xs font-bold text-gray-500 uppercase">Subject</span>
+                        <h3 id="displaySubject" class="text-xl font-bold text-indigo-700">Math</h3>
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-gray-500 uppercase block">Time Taken (Mins)</label>
+                        <input type="number" id="totalTime" value="45" class="p-2 border rounded font-bold w-24 text-center">
+                    </div>
                 </div>
-                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl transition shadow-md">Add to Student History</button>
-            </form>
+
+                <div class="overflow-x-auto bg-white rounded-xl border border-gray-200 mb-6">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-50 text-gray-600 text-sm uppercase tracking-wider">
+                                <th class="p-4 border-b">Q#</th>
+                                <th class="p-4 border-b">Sub-Topic</th>
+                                <th class="p-4 border-b">Status</th>
+                                <th class="p-4 border-b">Error Type</th>
+                            </tr>
+                        </thead>
+                        <tbody id="questionTableBody">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <button onclick="saveData()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl shadow-md transition">Confirm & Save Analysis</button>
+            </div>
         </div>
     </main>
 
     <script>
-        const fileInput = document.getElementById('fileInput');
-        const uploadArea = document.getElementById('uploadArea');
-        const scanningState = document.getElementById('scanningState');
-        const uploadForm = document.getElementById('uploadForm');
-        
-        let extractedThinking = {}; // Temporary holding object for the 8 types
+        // Simulate Question Data
+        function generateMockQuestions(subject) {
+            const numQuestions = Math.floor(Math.random() * 3) + 3; // 3 to 5 questions
+            const topics = {
+                "Mathematics": ["Algebra", "Geometry", "Calculus", "Trigonometry"],
+                "Physics": ["Kinematics", "Thermodynamics", "Electromagnetism"],
+                "Chemistry": ["Stoichiometry", "Atomic Structure", "Kinetics"]
+            };
+            const subtopics = topics[subject] || ["General"];
+            
+            let questions = [];
+            for(let i=1; i<=numQuestions; i++) {
+                let isCorrect = Math.random() > 0.4;
+                questions.push({
+                    id: i,
+                    topic: subtopics[Math.floor(Math.random() * subtopics.length)],
+                    correct: isCorrect,
+                    errorType: isCorrect ? "None" : ["Concept", "Careless", "Formula", "Time"][Math.floor(Math.random() * 4)]
+                });
+            }
+            return questions;
+        }
 
-        fileInput.addEventListener('change', function(e) {
+        document.getElementById('fileInput').addEventListener('change', function(e) {
             if(e.target.files.length > 0) {
-                uploadArea.classList.add('hidden');
-                scanningState.classList.remove('hidden');
+                document.getElementById('preScan').classList.add('hidden');
+                document.getElementById('scanningState').classList.remove('hidden');
                 
                 setTimeout(() => {
-                    scanningState.classList.add('hidden');
-                    uploadForm.classList.remove('hidden');
+                    document.getElementById('scanningState').classList.add('hidden');
+                    document.getElementById('verificationState').classList.remove('hidden');
                     
-                    const topics = ["Calculus", "Physics", "Chemistry", "Algebra", "Biology"];
-                    document.getElementById('topic').value = topics[Math.floor(Math.random() * topics.length)];
-                    document.getElementById('score').value = Math.floor(Math.random() * 40) + 60; 
-                    document.getElementById('time').value = Math.floor(Math.random() * 30) + 30; 
-                    document.getElementById('concept').value = Math.floor(Math.random() * 4);
-                    document.getElementById('careless').value = Math.floor(Math.random() * 3);
-                    document.getElementById('stress').value = Math.floor(Math.random() * 5) + 3; 
-
-                    // AI Simulates the 8 thinking types for this specific test
-                    extractedThinking = {
-                        critical: Math.floor(Math.random() * 40) + 50,
-                        creative: Math.floor(Math.random() * 50) + 40,
-                        analytical: Math.floor(Math.random() * 40) + 60,
-                        practical: Math.floor(Math.random() * 50) + 50,
-                        reflective: Math.floor(Math.random() * 60) + 30,
-                        convergent: Math.floor(Math.random() * 40) + 50,
-                        divergent: Math.floor(Math.random() * 50) + 40,
-                        logical: Math.floor(Math.random() * 30) + 70
-                    };
-                }, 2500);
+                    const subject = document.getElementById('subjectContext').value;
+                    document.getElementById('displaySubject').innerText = subject;
+                    
+                    const questions = generateMockQuestions(subject);
+                    const tbody = document.getElementById('questionTableBody');
+                    tbody.innerHTML = '';
+                    
+                    questions.forEach(q => {
+                        let statusColor = q.correct ? 'text-green-600 bg-green-50' : 'text-red-600 bg-red-50';
+                        tbody.innerHTML += `
+                            <tr class="border-b q-row">
+                                <td class="p-4 font-bold text-gray-700">Q${q.id}</td>
+                                <td class="p-4"><input type="text" class="q-topic border p-2 rounded w-full" value="${q.topic}"></td>
+                                <td class="p-4">
+                                    <select class="q-status border p-2 rounded font-bold ${statusColor}" onchange="updateColor(this)">
+                                        <option value="Correct" ${q.correct ? 'selected' : ''}>Correct</option>
+                                        <option value="Incorrect" ${!q.correct ? 'selected' : ''}>Incorrect</option>
+                                    </select>
+                                </td>
+                                <td class="p-4">
+                                    <select class="q-error border p-2 rounded w-full">
+                                        <option value="None" ${q.errorType === 'None' ? 'selected' : ''}>None</option>
+                                        <option value="Concept" ${q.errorType === 'Concept' ? 'selected' : ''}>Concept Misunderstanding</option>
+                                        <option value="Careless" ${q.errorType === 'Careless' ? 'selected' : ''}>Careless Mistake</option>
+                                        <option value="Formula" ${q.errorType === 'Formula' ? 'selected' : ''}>Wrong Formula</option>
+                                    </select>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                }, 2000);
             }
         });
 
-        uploadForm.addEventListener('submit', function(e) {
-            e.preventDefault();
+        function updateColor(select) {
+            if(select.value === 'Correct') { select.className = 'q-status border p-2 rounded font-bold text-green-600 bg-green-50'; } 
+            else { select.className = 'q-status border p-2 rounded font-bold text-red-600 bg-red-50'; }
+        }
+
+        function saveData() {
+            let totalQ = 0;
+            let correctQ = 0;
+            let errors = { "Concept": 0, "Careless": 0, "Formula": 0 };
+            
+            document.querySelectorAll('.q-row').forEach(row => {
+                totalQ++;
+                let status = row.querySelector('.q-status').value;
+                let error = row.querySelector('.q-error').value;
+                
+                if(status === 'Correct') correctQ++;
+                else if(error !== 'None' && errors[error] !== undefined) errors[error]++;
+            });
+
+            const score = Math.round((correctQ / totalQ) * 100);
+
             const newTest = {
-                topic: document.getElementById('topic').value,
-                score: Number(document.getElementById('score').value),
-                time: Number(document.getElementById('time').value),
-                concept: Number(document.getElementById('concept').value),
-                careless: Number(document.getElementById('careless').value),
-                stress: Number(document.getElementById('stress').value),
-                thinking: extractedThinking, // Saving the 8 cognitive traits
+                topic: document.getElementById('displaySubject').innerText,
+                score: score,
+                time: Number(document.getElementById('totalTime').value),
+                concept: errors["Concept"],
+                careless: errors["Careless"],
+                formula: errors["Formula"],
+                stress: Math.floor(Math.random() * 5) + 3, // Simulate stress
+                // AI simulates 8 thinking types behind the scenes
+                thinking: { critical: 70, creative: 60, analytical: 80, practical: 50, reflective: 60, convergent: 75, divergent: 55, logical: 85 },
                 date: new Date().toISOString()
             };
 
             let history = JSON.parse(localStorage.getItem('eduMetricsHistory')) || [];
-            history.push(newTest); 
+            history.push(newTest);
             localStorage.setItem('eduMetricsHistory', JSON.stringify(history));
             
             window.location.href = "index.html"; 
-        });
+        }
     </script>
 </body>
 </html>
