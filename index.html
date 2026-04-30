@@ -73,7 +73,7 @@
                             <h2 id="avgScore" class="text-5xl font-black text-gray-800">--%</h2>
                         </div>
                         
-                        <!-- NEW: STRESS INDICATOR -->
+                        <!-- STRESS INDICATOR -->
                         <div class="glass-card p-6 border-t-4" id="stressCardBorder">
                             <p class="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">AI Stress Indicator</p>
                             <div class="flex items-center gap-3 mt-1">
@@ -108,7 +108,7 @@
                 <!-- TAB 2: COGNITIVE PROFILE & PRACTICE GEN -->
                 <div id="tab-cognitive" class="tab-content">
                     
-                    <!-- NEW: AUTO PRACTICE GENERATOR -->
+                    <!-- AUTO PRACTICE GENERATOR -->
                     <div class="bg-gradient-to-r from-indigo-900 to-purple-800 rounded-2xl p-6 text-white shadow-xl mb-8 flex flex-col md:flex-row items-center justify-between">
                         <div>
                             <h3 class="text-xl font-bold mb-1"><i class="fas fa-magic text-yellow-400 mr-2"></i> Auto-Practice Generation</h3>
@@ -235,7 +235,7 @@
             document.getElementById('avgScore').innerText = overallAccuracy + '%';
             document.getElementById('totQ').innerText = totalQ;
 
-            // 2. STRESS INDICATOR LOGIC
+            // 2. STRESS INDICATOR LOGIC (BUG FIXED)
             // Stress is calculated by the frequency of Careless & Time mistakes
             let stressScore = (mistakes.Careless * 1.5 + mistakes.Time) / (totalQ || 1);
             let sCard = document.getElementById('stressCardBorder');
@@ -246,15 +246,15 @@
             if (stressScore > 0.3) {
                 sCard.classList.add('border-rose-500'); sLevel.innerText = "Severe"; sLevel.classList.add('text-rose-600');
                 sIcon.classList.add('text-rose-400', 'animate-pulse');
-                sText.innerHTML = "High frequency of careless/time errors. <strong class="text-rose-600">Student may be burnt out or stressed.</strong>";
+                sText.innerHTML = 'High frequency of careless/time errors. <strong class="text-rose-600">Student may be burnt out or stressed.</strong>';
             } else if (stressScore > 0.15) {
                 sCard.classList.add('border-amber-500'); sLevel.innerText = "Light"; sLevel.classList.add('text-amber-500');
                 sIcon.classList.add('text-amber-400');
-                sText.innerHTML = "Noticeable careless mistakes. <strong class="text-amber-600">Slight anxiety or rushing detected.</strong>";
+                sText.innerHTML = 'Noticeable careless mistakes. <strong class="text-amber-600">Slight anxiety or rushing detected.</strong>';
             } else {
                 sCard.classList.add('border-emerald-500'); sLevel.innerText = "Low"; sLevel.classList.add('text-emerald-500');
                 sIcon.classList.add('text-emerald-400');
-                sText.innerHTML = "Healthy learning state. Mistakes are primarily conceptual, not stress-induced.";
+                sText.innerHTML = 'Healthy learning state. Mistakes are primarily conceptual, not stress-induced.';
             }
 
             // 3. COGNITIVE ENGINE (Simulating 8 Types of Thinking based on Error Typology)
