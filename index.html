@@ -3,214 +3,182 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Dashboard - EduMetrics</title>
+    <title>Results - Smart Logic</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #1f2937; }
-        aside { background: linear-gradient(180deg, #ffffff 0%, #f9fafb 100%); }
-        .nav-item.active { background-color: #eef2ff; color: #4f46e5; }
-        .glass-card { background: white; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #f1f5f9; }
-        
-        /* Tab Styles */
-        .tab-btn { border-bottom: 2px solid transparent; transition: all 0.2s; padding-bottom: 0.5rem; }
-        .tab-btn.active { border-bottom-color: #4f46e5; color: #4f46e5; font-weight: bold; }
-        .tab-content { display: none; animation: fadeIn 0.3s; }
-        .tab-content.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #ffffff; color: #111827; }
+        .box { border: 1px solid #e5e7eb; border-radius: 12px; padding: 1.5rem; background: #ffffff; }
     </style>
 </head>
-<body class="flex h-screen overflow-hidden">
+<body class="p-8 max-w-5xl mx-auto">
 
-    <aside class="w-64 border-r border-gray-200 flex flex-col shadow-sm z-10 relative bg-white">
-        <div class="p-6 border-b border-gray-100 flex items-center justify-center">
-            <div class="w-10 h-10 bg-gradient-to-br from-green-400 to-blue-500 rounded-lg flex items-center justify-center mr-3 shadow-md text-white font-bold text-xl">E</div>
-            <h1 class="text-2xl font-black text-gray-800">Edu<span class="text-green-500">Metrics</span></h1>
+    <div class="flex justify-between items-end mb-8 border-b pb-4">
+        <div>
+            <h1 class="text-3xl font-bold tracking-tight">Performance Results</h1>
+            <p class="text-gray-500 mt-1" id="testCountText">Based on past 0 tests...</p>
         </div>
-        <nav class="flex-1 mt-6 space-y-2 px-4">
-            <a href="index.html" class="nav-item active flex items-center gap-3 px-4 py-3 rounded-xl font-bold"><i class="fas fa-chart-pie w-5 text-center text-indigo-500"></i> Dashboard</a>
-            <a href="teacher.html" class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-gray-500"><i class="fas fa-camera w-5 text-center"></i> AI Scanner</a>
-            <a href="premium.html" class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-gray-500"><i class="fas fa-compass w-5 text-center text-amber-400"></i> Career Guidance</a>
-        </nav>
-        <button onclick="clearData()" class="m-4 text-xs font-semibold text-red-500 p-3 rounded-xl border border-red-100 hover:bg-red-50 transition"><i class="fas fa-trash"></i> Clear History</button>
-    </aside>
+        <a href="input.html" class="bg-black text-white px-5 py-2 rounded-lg font-semibold hover:bg-gray-800 transition">+ New Entry</a>
+    </div>
 
-    <main class="flex-1 overflow-y-auto p-8 lg:p-10 relative">
-        <div class="max-w-6xl mx-auto">
-            
-            <header class="mb-6 flex justify-between items-end">
-                <div>
-                    <h2 class="text-4xl font-black tracking-tight">Student Profile</h2>
-                    <p class="text-gray-500 mt-1">Multi-dimensional diagnostic view.</p>
-                </div>
-            </header>
-
-            <!-- TABS NAVIGATION -->
-            <div class="flex gap-8 border-b border-gray-200 mb-8" id="tabsArea">
-                <button onclick="switchTab('tab-overview')" id="btn-overview" class="tab-btn active text-lg text-gray-500">Overview</button>
-                <button onclick="switchTab('tab-analysis')" id="btn-analysis" class="tab-btn text-lg text-gray-500">Deep Analysis</button>
-                <button onclick="switchTab('tab-cognitive')" id="btn-cognitive" class="tab-btn text-lg text-gray-500">Cognitive Map</button>
-            </div>
-
-            <!-- EMPTY STATE -->
-            <div id="emptyState" class="hidden text-center py-20 text-gray-400 font-bold bg-white rounded-2xl border border-gray-100 shadow-sm">
-                <i class="fas fa-folder-open text-4xl text-gray-300 mb-3 block"></i> No test data found. Upload a test via AI Scanner.
-            </div>
-
-            <div id="dataContainer" class="hidden">
-                <!-- TAB 1: OVERVIEW -->
-                <div id="tab-overview" class="tab-content active">
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                        <div class="glass-card p-5 border-l-4 border-indigo-500"><p class="text-xs font-bold text-gray-400 uppercase">Avg Score</p><h2 id="avgScore" class="text-3xl font-black">--%</h2></div>
-                        <div class="glass-card p-5 border-l-4 border-rose-500"><p class="text-xs font-bold text-gray-400 uppercase">Total Tests</p><h2 id="testCount" class="text-3xl font-black">--</h2></div>
-                        <div class="glass-card p-5 border-l-4 border-emerald-500"><p class="text-xs font-bold text-gray-400 uppercase">Logic Core</p><h2 id="avgLogic" class="text-3xl font-black">--%</h2></div>
-                        <div class="glass-card p-5 border-l-4 border-amber-500"><p class="text-xs font-bold text-gray-400 uppercase">Avg Stress</p><h2 id="avgStress" class="text-3xl font-black">--/10</h2></div>
-                    </div>
-                    <div class="glass-card p-6">
-                        <h3 class="font-bold text-gray-800 text-lg mb-4">Historical Score Trend</h3>
-                        <div class="relative h-72"><canvas id="historyChart"></canvas></div>
-                    </div>
-                </div>
-
-                <!-- TAB 2: DEEP ANALYSIS (NEW PIE CHART) -->
-                <div id="tab-analysis" class="tab-content">
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <div class="glass-card p-6">
-                            <h3 class="font-bold text-gray-800 text-lg mb-2">Error Typology</h3>
-                            <p class="text-xs text-gray-500 mb-4">Percentage breakdown of all mistakes made.</p>
-                            <div class="relative h-64"><canvas id="errorPieChart"></canvas></div>
-                        </div>
-                        <div class="glass-card p-6">
-                            <h3 class="font-bold text-gray-800 text-lg mb-2">Weakest Subject Areas</h3>
-                            <ul id="weakTopicsList" class="space-y-3 mt-4">
-                                <!-- Populated via JS -->
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- TAB 3: COGNITIVE MAP & PRACTICE -->
-                <div id="tab-cognitive" class="tab-content">
-                    <div class="bg-gradient-to-r from-indigo-600 to-purple-700 rounded-2xl p-6 text-white shadow-lg mb-6 flex items-center justify-between">
-                        <div>
-                            <h3 class="text-xl font-bold mb-1"><i class="fas fa-magic text-yellow-300 mr-2"></i> Auto-Practice Generated</h3>
-                            <p id="practiceText" class="text-indigo-100 text-sm">Analyzing...</p>
-                        </div>
-                        <button class="bg-white text-indigo-700 font-bold px-6 py-3 rounded-xl shadow-md hover:scale-105 transition transform">Start Custom Test</button>
-                    </div>
-                    <div class="glass-card p-6">
-                        <h3 class="font-bold text-gray-800 text-lg mb-4 text-center">8-Point Cognitive Profile</h3>
-                        <div class="relative h-72"><canvas id="thinkingChart"></canvas></div>
-                    </div>
-                </div>
-            </div>
+    <!-- SECTION 1: SUMMARY BOX -->
+    <div class="grid grid-cols-3 gap-6 mb-8">
+        <div class="box bg-gray-50">
+            <p class="text-sm text-gray-500 font-semibold uppercase">Total Questions</p>
+            <h2 id="totQ" class="text-4xl font-black mt-1">0</h2>
         </div>
-    </main>
+        <div class="box bg-gray-50">
+            <p class="text-sm text-gray-500 font-semibold uppercase">Correct Answers</p>
+            <h2 id="totC" class="text-4xl font-black mt-1">0</h2>
+        </div>
+        <div class="box bg-gray-50">
+            <p class="text-sm text-gray-500 font-semibold uppercase">Main Weakness</p>
+            <h2 id="mainW" class="text-xl font-bold mt-2 text-red-600">--</h2>
+        </div>
+    </div>
+
+    <!-- SECTION 2: SMART FEEDBACK & SUGGESTIONS -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div class="box border-l-4 border-black">
+            <h3 class="font-bold mb-3 flex items-center gap-2">🧠 Smart Feedback</h3>
+            <ul id="smartFeedbackList" class="space-y-2 text-gray-700 font-medium">
+                <!-- Generated by JS logic -->
+            </ul>
+        </div>
+        <div class="box border-l-4 border-black">
+            <h3 class="font-bold mb-3 flex items-center gap-2">🧘 Suggestions & Stress</h3>
+            <p id="practiceSuggestion" class="text-gray-700 font-medium mb-3">Recommended: Take a test to generate suggestions.</p>
+            <p id="stressIndicator" class="text-sm text-gray-500 italic"></p>
+        </div>
+    </div>
+
+    <!-- SECTION 3: LATEST THINKING ANALYSIS -->
+    <div class="box mb-8 bg-gray-50" id="thinkingAnalysisArea">
+        <h3 class="font-bold mb-4">Section 4: Thinking Analysis (Latest Question)</h3>
+        <div id="latestAnalysisContent" class="text-gray-700">No data yet.</div>
+    </div>
+
+    <!-- SECTION 4: CHARTS -->
+    <h3 class="font-bold text-xl mb-4">Section 2: Visual Charts</h3>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="box"><h4 class="font-semibold text-sm mb-4 text-center">Mistake Types</h4><canvas id="pieChart"></canvas></div>
+        <div class="box"><h4 class="font-semibold text-sm mb-4 text-center">Weak Topics</h4><canvas id="barChart"></canvas></div>
+        <div class="box"><h4 class="font-semibold text-sm mb-4 text-center">Progress (Accuracy)</h4><canvas id="lineChart"></canvas></div>
+    </div>
+
+    <button onclick="clearData()" class="text-red-500 text-sm hover:underline">Clear All Data</button>
 
     <script>
-        // --- TAB LOGIC ---
-        function switchTab(tabId) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-            document.getElementById(tabId).classList.add('active');
-            document.getElementById('btn-' + tabId.split('-')[1]).classList.add('active');
-        }
+        function clearData() { if(confirm("Clear data?")) { localStorage.removeItem('smartLogicData'); location.reload(); } }
 
-        function clearData() {
-            if(confirm("Delete all history?")) { localStorage.removeItem('eduMetricsHistory'); location.reload(); }
-        }
+        const data = JSON.parse(localStorage.getItem('smartLogicData')) || [];
 
-        // --- DATA PROCESSING ---
-        let historyData = JSON.parse(localStorage.getItem('eduMetricsHistory')) || [];
-        Chart.defaults.font.family = "'Inter', sans-serif";
-
-        if(historyData.length === 0) {
-            document.getElementById('emptyState').classList.remove('hidden');
-        } else {
-            document.getElementById('dataContainer').classList.remove('hidden');
-
-            let labels = [], scores = [];
-            let tScore = 0, tStress = 0;
-            let errors = { Concept: 0, Careless: 0, Formula: 0 };
-            let topicsData = {};
-            let avgThink = { critical: 0, creative: 0, analytical: 0, practical: 0, reflective: 0, convergent: 0, divergent: 0, logical: 0 };
-
-            historyData.forEach((test, i) => {
-                labels.push(`${test.topic} (T${i+1})`);
-                scores.push(test.score);
-                tScore += test.score;
-                tStress += test.stress || 5;
-
-                // Error Aggregation
-                errors.Concept += test.concept || 0;
-                errors.Careless += test.careless || 0;
-                errors.Formula += test.formula || 0;
-
-                // Topic Aggregation
-                let totalErrors = (test.concept || 0) + (test.careless || 0) + (test.formula || 0);
-                if(!topicsData[test.topic]) topicsData[test.topic] = 0;
-                topicsData[test.topic] += totalErrors;
-
-                // Thinking Aggregation
-                if(test.thinking) {
-                    Object.keys(avgThink).forEach(k => avgThink[k] += test.thinking[k]);
+        if (data.length > 0) {
+            document.getElementById('testCountText').innerText = `Based on past ${data.length} tests...`;
+            
+            let totalQ = data.length;
+            let correctCount = 0;
+            let mistakes = { Conceptual: 0, Careless: 0, Practice: 0, Time: 0 };
+            let topics = {};
+            let progressHistory = []; // Track correct vs total over time (simulated by groups of 1)
+            
+            data.forEach((item, index) => {
+                if (item.is_correct) correctCount++;
+                if (item.mistake_type !== 'None') {
+                    mistakes[item.mistake_type]++;
+                    topics[item.topic] = (topics[item.topic] || 0) + 1;
                 }
+                // Simple progress calculation (cumulative accuracy)
+                progressHistory.push( Math.round((correctCount / (index + 1)) * 100) );
             });
 
-            const count = historyData.length;
-            Object.keys(avgThink).forEach(k => avgThink[k] = Math.round(avgThink[k] / count) || 60);
+            // Update Summary Box
+            document.getElementById('totQ').innerText = totalQ;
+            document.getElementById('totC').innerText = correctCount;
 
-            // Populate Top Overview KPIs
-            document.getElementById('avgScore').innerText = Math.round(tScore/count) + '%';
-            document.getElementById('testCount').innerText = count;
-            document.getElementById('avgLogic').innerText = avgThink.logical + '%';
-            document.getElementById('avgStress').innerText = (tStress/count).toFixed(1);
+            // Find Main Weakness
+            let mainWeakness = "None";
+            let maxMistakes = 0;
+            for (const [key, value] of Object.entries(mistakes)) {
+                if (value > maxMistakes) { maxMistakes = value; mainWeakness = key; }
+            }
+            if (maxMistakes > 0) {
+                document.getElementById('mainW').innerText = `Mostly ${mainWeakness} Errors`;
+            }
 
-            // Weakest areas string
-            let weakTopic = Object.keys(topicsData).reduce((a, b) => topicsData[a] > topicsData[b] ? a : b, Object.keys(topicsData)[0]);
-            let weakType = Object.keys(avgThink).reduce((a, b) => avgThink[a] < avgThink[b] ? a : b);
-            document.getElementById('practiceText').innerHTML = `You are struggling with <strong>${weakTopic}</strong> and <strong>${weakType} Thinking</strong>.`;
+            // --- THE "VERY IMPORTANT" LOGIC RULES ---
+            const feedbackList = document.getElementById('smartFeedbackList');
+            
+            // Rule 1: Careless
+            if (mistakes.Careless > mistakes.Conceptual && mistakes.Careless > 0) {
+                feedbackList.innerHTML += `<li>• "You understand concepts but make careless mistakes."</li>`;
+            }
+            
+            // Rule 2: Time Issue
+            if (mistakes.Time >= 2) { // Adjusted from 3 to 2 so it triggers earlier for testing
+                feedbackList.innerHTML += `<li>• "Time management needs improvement."</li>`;
+            }
 
-            // Populate Weakest Subjects List
-            let sortedTopics = Object.entries(topicsData).sort((a,b) => b[1] - a[1]);
-            let listHtml = '';
-            sortedTopics.forEach(t => {
-                listHtml += `<li class="flex justify-between p-3 bg-red-50 rounded-lg border border-red-100"><span class="font-bold text-gray-700">${t[0]}</span> <span class="text-red-600 font-bold">${t[1]} errors total</span></li>`;
-            });
-            document.getElementById('weakTopicsList').innerHTML = listHtml;
+            // Rule 3: Weak Understanding (Guessed but Correct)
+            const guessedRight = data.filter(d => d.is_correct && d.guessed).length;
+            if (guessedRight > 0) {
+                feedbackList.innerHTML += `<li>• "Weak understanding detected (Correct answers were guessed)."</li>`;
+            }
+
+            // If no specific feedback triggered
+            if(feedbackList.innerHTML === "") feedbackList.innerHTML = "<li>• Keep practicing! Gathering more data to find patterns.</li>";
+
+            // Practice Suggestion & Stress Rule
+            let weakTopic = Object.keys(topics).reduce((a, b) => topics[a] > topics[b] ? a : b, "");
+            if (weakTopic) {
+                document.getElementById('practiceSuggestion').innerText = `"Recommended: Practice more questions from ${weakTopic}"`;
+            }
+
+            // Subtle Stress Indicator Rule
+            if ((mistakes.Careless + mistakes.Time) >= 3) {
+                document.getElementById('stressIndicator').innerText = `"Frequent careless/time mistakes detected. Consider guidance."`;
+            }
+
+            // --- THINKING ANALYSIS (Latest Entry) ---
+            const latest = data[data.length - 1];
+            let analysisHTML = "";
+            if (latest.is_correct) {
+                if (latest.guessed) {
+                    analysisHTML = `<p class="text-green-600 font-bold">☑ Answer Correct (But Guessed)</p>
+                                    <p class="mt-1">⚠️ Logic Issue Detected</p>
+                                    <p class="mt-2 font-semibold">Suggestion: "Revise core concept behind this question"</p>`;
+                } else {
+                    analysisHTML = `<p class="text-green-600 font-bold">☑ Answer Correct</p>
+                                    <p class="mt-2 font-semibold">Suggestion: "Great logic. Keep it up!"</p>`;
+                }
+            } else {
+                analysisHTML = `<p class="text-red-600 font-bold">❌ Answer Wrong</p>
+                                <p class="mt-1">🔍 Mistake Type: ${latest.mistake_type}</p>
+                                <p class="mt-2 font-semibold">Suggestion: "Focus on understanding basics of ${latest.topic}"</p>`;
+            }
+            document.getElementById('latestAnalysisContent').innerHTML = analysisHTML;
 
             // --- CHARTS ---
-            
-            // Overview: Line Chart
-            new Chart(document.getElementById('historyChart').getContext('2d'), { 
-                type: 'line', 
-                data: { labels: labels, datasets: [{ label: 'Score', data: scores, borderColor: '#4f46e5', tension: 0.3, fill: true, backgroundColor: 'rgba(79, 70, 229, 0.1)', borderWidth: 3 }] },
-                options: { responsive: true, maintainAspectRatio: false, scales: { y: { min: 0, max: 100 } } }
-            });
-
-            // Analysis: Error Pie Chart
-            new Chart(document.getElementById('errorPieChart').getContext('2d'), {
+            // Pie Chart (Mistakes)
+            new Chart(document.getElementById('pieChart'), {
                 type: 'pie',
-                data: {
-                    labels: ['Concept', 'Careless', 'Wrong Formula'],
-                    datasets: [{ data: [errors.Concept, errors.Careless, errors.Formula], backgroundColor: ['#ef4444', '#f59e0b', '#3b82f6'] }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+                data: { labels: ['Conceptual', 'Careless', 'Practice', 'Time'], datasets: [{ data: [mistakes.Conceptual, mistakes.Careless, mistakes.Practice, mistakes.Time], backgroundColor: ['#ef4444', '#f59e0b', '#3b82f6', '#8b5cf6'] }] },
+                options: { plugins: { legend: { position: 'bottom', labels: { boxWidth: 12 } } } }
             });
 
-            // Cognitive: 8-Type Bar Chart
-            new Chart(document.getElementById('thinkingChart').getContext('2d'), {
+            // Bar Chart (Topics)
+            new Chart(document.getElementById('barChart'), {
                 type: 'bar',
-                data: {
-                    labels: ['Critical', 'Creative', 'Analytical', 'Practical', 'Reflective', 'Convergent', 'Divergent', 'Logical'],
-                    datasets: [{
-                        label: 'Score',
-                        data: [avgThink.critical, avgThink.creative, avgThink.analytical, avgThink.practical, avgThink.reflective, avgThink.convergent, avgThink.divergent, avgThink.logical],
-                        backgroundColor: '#8b5cf6', borderRadius: 4
-                    }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { min: 0, max: 100 } } }
+                data: { labels: Object.keys(topics), datasets: [{ label: 'Mistakes', data: Object.values(topics), backgroundColor: '#000000' }] },
+                options: { scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }, plugins: { legend: { display: false } } }
+            });
+
+            // Line Chart (Progress)
+            let testLabels = data.map((_, i) => `T${i+1}`);
+            new Chart(document.getElementById('lineChart'), {
+                type: 'line',
+                data: { labels: testLabels, datasets: [{ label: 'Cumulative Accuracy %', data: progressHistory, borderColor: '#000000', tension: 0.1 }] },
+                options: { scales: { y: { min: 0, max: 100 } }, plugins: { legend: { display: false } } }
             });
         }
     </script>

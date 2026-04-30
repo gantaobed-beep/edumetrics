@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Input - Smart Logic</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #ffffff; color: #111827; }
+        .input-field { width: 100%; padding: 0.75rem; border: 1px solid #e5e7eb; border-radius: 0.5rem; outline: none; transition: border-color 0.2s; background: #fafafa; }
+        .input-field:focus { border-color: #000000; background: #ffffff; }
+    </style>
+</head>
+<body class="p-8 max-w-2xl mx-auto">
+
+    <div class="mb-8 border-b pb-4">
+        <h1 class="text-3xl font-bold tracking-tight">Data Input</h1>
+        <p class="text-gray-500 mt-1">Simple entry, smart analysis.</p>
+    </div>
+
+    <form id="inputForm" class="space-y-6">
+        
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+                <label class="block text-sm font-semibold mb-1">Student Name</label>
+                <!-- Personalized default value -->
+                <input type="text" id="studentName" class="input-field" value="Obed Ganta" required>
+            </div>
+            <div>
+                <label class="block text-sm font-semibold mb-1">Subject</label>
+                <input type="text" id="subject" class="input-field" placeholder="e.g. Math" required>
+            </div>
+        </div>
+
+        <div>
+            <label class="block text-sm font-semibold mb-1">Topic</label>
+            <input type="text" id="topic" class="input-field" placeholder="e.g. Algebra" required>
+        </div>
+
+        <div>
+            <label class="block text-sm font-semibold mb-1">Question</label>
+            <textarea id="question" rows="2" class="input-field" required></textarea>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+                <label class="block text-sm font-semibold mb-1">Correct Answer</label>
+                <input type="text" id="correctAnswer" class="input-field" required>
+            </div>
+            <div>
+                <label class="block text-sm font-semibold mb-1">Student Answer</label>
+                <input type="text" id="studentAnswer" class="input-field" required>
+            </div>
+        </div>
+
+        <div class="p-5 border border-gray-200 rounded-xl bg-gray-50">
+            <h3 class="font-bold mb-4">Diagnostic Details 👈 (Most Important)</h3>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-semibold mb-1">Type of Mistake</label>
+                <select id="mistakeType" class="input-field bg-white">
+                    <option value="None">No Mistake (Correct)</option>
+                    <option value="Conceptual">Conceptual</option>
+                    <option value="Careless">Careless</option>
+                    <option value="Practice">Lack of Practice</option>
+                    <option value="Time">Time Issue</option>
+                </select>
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-sm font-semibold mb-1">Solution Steps / Notes</label>
+                <textarea id="solutionSteps" rows="2" class="input-field bg-white"></textarea>
+            </div>
+
+            <div class="flex items-center gap-3 bg-white p-3 border rounded-lg">
+                <input type="checkbox" id="isGuessed" class="w-5 h-5 accent-black">
+                <label for="isGuessed" class="text-sm font-semibold cursor-pointer">Answer guessed? (Yes/No)</label>
+            </div>
+        </div>
+
+        <button type="submit" class="w-full bg-black hover:bg-gray-800 text-white font-bold py-4 rounded-lg transition">
+            Save & Generate Analysis
+        </button>
+    </form>
+
+    <script>
+        document.getElementById('inputForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const isCorrect = document.getElementById('mistakeType').value === 'None';
+            
+            const entry = {
+                id: Date.now(),
+                name: document.getElementById('studentName').value,
+                subject: document.getElementById('subject').value,
+                topic: document.getElementById('topic').value,
+                question: document.getElementById('question').value,
+                correct_answer: document.getElementById('correctAnswer').value,
+                student_answer: document.getElementById('studentAnswer').value,
+                mistake_type: document.getElementById('mistakeType').value,
+                steps: document.getElementById('solutionSteps').value,
+                guessed: document.getElementById('isGuessed').checked,
+                is_correct: isCorrect
+            };
+
+            let data = JSON.parse(localStorage.getItem('smartLogicData')) || [];
+            data.push(entry);
+            localStorage.setItem('smartLogicData', JSON.stringify(data));
+            
+            window.location.href = "index.html"; 
+        });
+    </script>
+</body>
+</html>
