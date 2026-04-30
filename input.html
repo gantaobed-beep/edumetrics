@@ -3,110 +3,239 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Input - Smart Logic</title>
+    <title>Bulk AI Scanner - Smart Logic</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #ffffff; color: #111827; }
         .input-field { width: 100%; padding: 0.75rem; border: 1px solid #e5e7eb; border-radius: 0.5rem; outline: none; transition: border-color 0.2s; background: #fafafa; }
         .input-field:focus { border-color: #000000; background: #ffffff; }
+        
+        /* Drag & Drop Styles */
+        .drop-zone { border: 2px dashed #d1d5db; transition: all 0.2s ease; }
+        .drop-zone.dragover { border-color: #000000; background-color: #f9fafb; }
+        
+        /* Scanning Animation */
+        .scan-line { width: 100%; height: 3px; background-color: #3b82f6; position: absolute; top: 0; left: 0; animation: scan 1.5s linear infinite; box-shadow: 0 0 10px #3b82f6; }
+        @keyframes scan { 0% { top: 0; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
     </style>
 </head>
-<body class="p-8 max-w-2xl mx-auto">
+<body class="p-8 max-w-4xl mx-auto">
 
     <div class="mb-8 border-b pb-4">
-        <h1 class="text-3xl font-bold tracking-tight">Data Input</h1>
-        <p class="text-gray-500 mt-1">Simple entry, smart analysis.</p>
+        <h1 class="text-3xl font-bold tracking-tight">Bulk Data Input</h1>
+        <p class="text-gray-500 mt-1">Upload multiple answer sheets. The AI will extract the diagnostic details.</p>
     </div>
 
-    <form id="inputForm" class="space-y-6">
-        
-        <div class="grid grid-cols-2 gap-4">
+    <!-- PHASE 1: UPLOAD ZONE -->
+    <div id="uploadPhase">
+        <div class="mb-6 flex justify-between items-center bg-gray-50 p-4 rounded-xl border">
             <div>
                 <label class="block text-sm font-semibold mb-1">Student Name</label>
-                <!-- Personalized default value -->
-                <input type="text" id="studentName" class="input-field" value="Obed Ganta" required>
+                <input type="text" id="globalStudentName" class="input-field py-2" value="Obed Ganta">
             </div>
             <div>
                 <label class="block text-sm font-semibold mb-1">Subject</label>
-                <input type="text" id="subject" class="input-field" placeholder="e.g. Math" required>
+                <input type="text" id="globalSubject" class="input-field py-2" placeholder="e.g. Mathematics">
             </div>
         </div>
 
-        <div>
-            <label class="block text-sm font-semibold mb-1">Topic</label>
-            <input type="text" id="topic" class="input-field" placeholder="e.g. Algebra" required>
+        <div id="dropZone" class="drop-zone rounded-2xl p-16 text-center cursor-pointer hover:bg-gray-50" onclick="document.getElementById('fileInput').click()">
+            <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+            </svg>
+            <h3 class="text-xl font-bold text-gray-800">Click or Drag images here</h3>
+            <p class="text-sm text-gray-500 mt-2">Upload minimum 5 answer sheet images for best analysis.</p>
+            <input type="file" id="fileInput" multiple accept="image/*" class="hidden">
+        </div>
+    </div>
+
+    <!-- PHASE 2: SCANNING ANIMATION -->
+    <div id="scanningPhase" class="hidden text-center py-20 relative overflow-hidden rounded-2xl bg-gray-50 border">
+        <div class="scan-line"></div>
+        <div class="animate-pulse">
+            <svg class="mx-auto h-16 w-16 text-blue-500 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+            </svg>
+            <h3 class="text-2xl font-bold text-gray-800">AI is analyzing <span id="imageCountText">0</span> images...</h3>
+            <p class="text-gray-500 mt-2">Extracting handwriting, logic steps, and mistake types.</p>
+        </div>
+    </div>
+
+    <!-- PHASE 3: VERIFICATION & EDITING -->
+    <form id="verificationPhase" class="hidden space-y-8">
+        <div class="bg-blue-50 text-blue-800 p-4 rounded-xl border border-blue-200 text-sm font-semibold flex items-center justify-between">
+            <span>Extraction complete! Please verify the AI's analysis before saving.</span>
+            <span class="bg-blue-200 px-2 py-1 rounded text-xs" id="verifyCount">0 items</span>
         </div>
 
-        <div>
-            <label class="block text-sm font-semibold mb-1">Question</label>
-            <textarea id="question" rows="2" class="input-field" required></textarea>
-        </div>
+        <!-- Container for dynamically generated question cards -->
+        <div id="cardsContainer" class="space-y-8"></div>
 
-        <div class="grid grid-cols-2 gap-4">
-            <div>
-                <label class="block text-sm font-semibold mb-1">Correct Answer</label>
-                <input type="text" id="correctAnswer" class="input-field" required>
-            </div>
-            <div>
-                <label class="block text-sm font-semibold mb-1">Student Answer</label>
-                <input type="text" id="studentAnswer" class="input-field" required>
-            </div>
-        </div>
-
-        <div class="p-5 border border-gray-200 rounded-xl bg-gray-50">
-            <h3 class="font-bold mb-4">Diagnostic Details 👈 (Most Important)</h3>
-            
-            <div class="mb-4">
-                <label class="block text-sm font-semibold mb-1">Type of Mistake</label>
-                <select id="mistakeType" class="input-field bg-white">
-                    <option value="None">No Mistake (Correct)</option>
-                    <option value="Conceptual">Conceptual</option>
-                    <option value="Careless">Careless</option>
-                    <option value="Practice">Lack of Practice</option>
-                    <option value="Time">Time Issue</option>
-                </select>
-            </div>
-
-            <div class="mb-4">
-                <label class="block text-sm font-semibold mb-1">Solution Steps / Notes</label>
-                <textarea id="solutionSteps" rows="2" class="input-field bg-white"></textarea>
-            </div>
-
-            <div class="flex items-center gap-3 bg-white p-3 border rounded-lg">
-                <input type="checkbox" id="isGuessed" class="w-5 h-5 accent-black">
-                <label for="isGuessed" class="text-sm font-semibold cursor-pointer">Answer guessed? (Yes/No)</label>
-            </div>
-        </div>
-
-        <button type="submit" class="w-full bg-black hover:bg-gray-800 text-white font-bold py-4 rounded-lg transition">
-            Save & Generate Analysis
+        <button type="submit" class="w-full bg-black hover:bg-gray-800 text-white font-bold py-4 rounded-xl transition shadow-lg text-lg">
+            Save All Verified Data
         </button>
     </form>
 
     <script>
-        document.getElementById('inputForm').addEventListener('submit', function(e) {
+        const fileInput = document.getElementById('fileInput');
+        const dropZone = document.getElementById('dropZone');
+        const uploadPhase = document.getElementById('uploadPhase');
+        const scanningPhase = document.getElementById('scanningPhase');
+        const verificationPhase = document.getElementById('verificationPhase');
+        const cardsContainer = document.getElementById('cardsContainer');
+
+        let uploadedFiles = [];
+
+        // Drag and Drop Events
+        dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            handleFiles(e.dataTransfer.files);
+        });
+        fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
+
+        function handleFiles(files) {
+            if (files.length === 0) return;
+            
+            // Allow user to proceed even if less than 5, but warn them (good for testing)
+            if (files.length < 5) {
+                alert("You uploaded less than 5 images. Proceeding anyway for the prototype demo!");
+            }
+
+            uploadedFiles = Array.from(files);
+            document.getElementById('imageCountText').innerText = uploadedFiles.length;
+            document.getElementById('verifyCount').innerText = `${uploadedFiles.length} questions`;
+
+            // Transition to Scanning Phase
+            uploadPhase.classList.add('hidden');
+            scanningPhase.classList.remove('hidden');
+
+            // Simulate AI Processing Time (3 seconds)
+            setTimeout(() => {
+                generateVerificationCards();
+                scanningPhase.classList.add('hidden');
+                verificationPhase.classList.remove('hidden');
+            }, 3000);
+        }
+
+        function generateVerificationCards() {
+            cardsContainer.innerHTML = ''; // Clear container
+
+            // Mock data arrays to simulate AI extraction
+            const topics = ["Algebra", "Geometry", "Calculus", "Fractions"];
+            const mistakeTypes = ["None", "Conceptual", "Careless", "Practice", "Time"];
+            const steps = ["Applied formula incorrectly.", "Missed a negative sign.", "Perfect execution.", "Ran out of time here."];
+
+            uploadedFiles.forEach((file, index) => {
+                // Create a temporary URL to show the image preview
+                const imageUrl = URL.createObjectURL(file);
+                
+                // Simulate AI picking random values for the demo
+                const randomTopic = topics[Math.floor(Math.random() * topics.length)];
+                const randomMistake = mistakeTypes[Math.floor(Math.random() * mistakeTypes.length)];
+                const randomStep = steps[Math.floor(Math.random() * steps.length)];
+                const isGuessed = Math.random() > 0.8; // 20% chance AI thinks it's guessed
+
+                // Build the HTML for a single question card
+                const cardHTML = `
+                    <div class="question-card border border-gray-200 rounded-2xl overflow-hidden shadow-sm flex flex-col md:flex-row bg-white">
+                        
+                        <!-- Image Preview Column -->
+                        <div class="w-full md:w-1/3 bg-gray-100 border-r border-gray-200 p-4 flex flex-col items-center justify-center">
+                            <span class="bg-black text-white text-xs font-bold px-2 py-1 rounded-full mb-2 self-start">Image ${index + 1}</span>
+                            <img src="${imageUrl}" alt="Student Answer" class="max-h-48 object-contain rounded border border-gray-300 shadow-sm bg-white">
+                        </div>
+
+                        <!-- Data Fields Column -->
+                        <div class="w-full md:w-2/3 p-6 space-y-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Topic</label>
+                                <input type="text" class="card-topic input-field py-1 text-sm" value="${randomTopic}" required>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Extracted Question</label>
+                                <textarea class="card-question input-field py-1 text-sm" rows="1" required>Solve for X based on the handwritten equation.</textarea>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Correct Ans</label>
+                                    <input type="text" class="card-correct input-field py-1 text-sm" value="42" required>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Student Ans</label>
+                                    <input type="text" class="card-student input-field py-1 text-sm" value="${randomMistake === 'None' ? '42' : '24'}" required>
+                                </div>
+                            </div>
+
+                            <div class="p-4 border rounded-xl bg-gray-50">
+                                <label class="block text-xs font-semibold text-gray-800 uppercase tracking-wide mb-2">Diagnostic Details 👈</label>
+                                
+                                <div class="grid grid-cols-2 gap-4 mb-3">
+                                    <div>
+                                        <select class="card-mistake input-field bg-white py-1 text-sm font-semibold text-red-600">
+                                            <option value="None" ${randomMistake === 'None' ? 'selected' : ''}>No Mistake (Correct)</option>
+                                            <option value="Conceptual" ${randomMistake === 'Conceptual' ? 'selected' : ''}>Conceptual</option>
+                                            <option value="Careless" ${randomMistake === 'Careless' ? 'selected' : ''}>Careless</option>
+                                            <option value="Practice" ${randomMistake === 'Practice' ? 'selected' : ''}>Lack of Practice</option>
+                                            <option value="Time" ${randomMistake === 'Time' ? 'selected' : ''}>Time Issue</option>
+                                        </select>
+                                    </div>
+                                    <div class="flex items-center gap-2 bg-white px-3 border rounded-lg">
+                                        <input type="checkbox" class="card-guessed w-4 h-4 accent-black" ${isGuessed ? 'checked' : ''}>
+                                        <label class="text-xs font-semibold cursor-pointer">Answer guessed?</label>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <textarea class="card-steps input-field bg-white py-1 text-sm" rows="1" placeholder="Solution steps/notes">${randomMistake === 'None' ? 'Correct.' : randomStep}</textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                cardsContainer.insertAdjacentHTML('beforeend', cardHTML);
+            });
+        }
+
+        // Handle Final Save
+        verificationPhase.addEventListener('submit', function(e) {
             e.preventDefault();
             
-            const isCorrect = document.getElementById('mistakeType').value === 'None';
-            
-            const entry = {
-                id: Date.now(),
-                name: document.getElementById('studentName').value,
-                subject: document.getElementById('subject').value,
-                topic: document.getElementById('topic').value,
-                question: document.getElementById('question').value,
-                correct_answer: document.getElementById('correctAnswer').value,
-                student_answer: document.getElementById('studentAnswer').value,
-                mistake_type: document.getElementById('mistakeType').value,
-                steps: document.getElementById('solutionSteps').value,
-                guessed: document.getElementById('isGuessed').checked,
-                is_correct: isCorrect
-            };
+            const globalStudent = document.getElementById('globalStudentName').value;
+            const globalSubject = document.getElementById('globalSubject').value || "General Subject";
 
-            let data = JSON.parse(localStorage.getItem('smartLogicData')) || [];
-            data.push(entry);
-            localStorage.setItem('smartLogicData', JSON.stringify(data));
+            let existingData = JSON.parse(localStorage.getItem('smartLogicData')) || [];
             
+            // Loop through all generated cards and extract the verified data
+            const cards = document.querySelectorAll('.question-card');
+            cards.forEach(card => {
+                const mistakeType = card.querySelector('.card-mistake').value;
+                const isCorrect = mistakeType === 'None';
+
+                const entry = {
+                    id: Date.now() + Math.random(), // Unique ID
+                    name: globalStudent,
+                    subject: globalSubject,
+                    topic: card.querySelector('.card-topic').value,
+                    question: card.querySelector('.card-question').value,
+                    correct_answer: card.querySelector('.card-correct').value,
+                    student_answer: card.querySelector('.card-student').value,
+                    mistake_type: mistakeType,
+                    steps: card.querySelector('.card-steps').value,
+                    guessed: card.querySelector('.card-guessed').checked,
+                    is_correct: isCorrect
+                };
+                existingData.push(entry);
+            });
+
+            // Save to localStorage
+            localStorage.setItem('smartLogicData', JSON.stringify(existingData));
+            
+            // Redirect to the Dashboard to see the results
             window.location.href = "index.html"; 
         });
     </script>
