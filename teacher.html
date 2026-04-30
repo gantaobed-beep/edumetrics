@@ -12,8 +12,6 @@
         .nav-item.active { background-color: #eef2ff; color: #4f46e5; }
         .glass-panel { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-radius: 20px; box-shadow: 0 20px 40px -15px rgba(0,0,0,0.1); }
         .custom-input { width: 100%; padding: 0.75rem 1rem; background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 0.75rem; font-weight: 600; }
-        
-        /* Scanner UI Styles */
         .upload-zone { border: 2px dashed #a78bfa; transition: all 0.3s; cursor: pointer; }
         .upload-zone:hover { background-color: #f5f3ff; border-color: #7c3aed; }
         .scanning-laser { width: 100%; height: 2px; background-color: #10b981; position: absolute; top: 0; left: 0; box-shadow: 0 0 10px #10b981; animation: scan 2s linear infinite; }
@@ -22,7 +20,6 @@
 </head>
 <body class="flex h-screen overflow-hidden">
 
-    <!-- Sidebar -->
     <aside class="w-64 border-r border-gray-200 flex flex-col shadow-sm z-10 relative">
         <div class="p-6 border-b border-gray-100 flex items-center justify-center">
              <div class="w-10 h-10 bg-gradient-to-br from-green-400 to-blue-500 rounded-lg flex items-center justify-center mr-3 shadow-md text-white font-bold text-xl">E</div>
@@ -37,33 +34,28 @@
 
     <main class="flex-1 overflow-y-auto p-8 flex items-center justify-center">
         <div class="glass-panel p-10 w-full max-w-3xl border-t-8 border-t-indigo-500 relative overflow-hidden">
-            
             <div class="text-center mb-8">
                 <h2 class="text-3xl font-black text-gray-800 tracking-tight">AI Answer Sheet Scanner</h2>
-                <p class="text-gray-500 mt-2">Upload a student's test. The AI will extract all historical and cognitive metrics automatically.</p>
+                <p class="text-gray-500 mt-2">Extracts 8 distinct cognitive thinking types directly from student work.</p>
             </div>
 
-            <!-- Upload Area -->
             <div id="uploadArea" class="upload-zone rounded-2xl p-12 text-center bg-indigo-50" onclick="document.getElementById('fileInput').click()">
-                <i class="fas fa-cloud-upload-alt text-5xl text-indigo-400 mb-4"></i>
-                <h3 class="text-xl font-bold text-gray-700">Click to Upload Answer Sheet</h3>
-                <p class="text-sm text-gray-500 mt-2">Supports JPG, PNG, PDF</p>
+                <i class="fas fa-file-scan text-5xl text-indigo-400 mb-4"></i>
+                <h3 class="text-xl font-bold text-gray-700">Upload Answer Sheet</h3>
                 <input type="file" id="fileInput" class="hidden" accept="image/*,.pdf">
             </div>
 
-            <!-- Scanning State (Hidden initially) -->
             <div id="scanningState" class="hidden relative h-48 bg-gray-100 rounded-xl flex items-center justify-center border border-gray-200">
                 <div class="scanning-laser"></div>
                 <div class="text-center">
                     <i class="fas fa-microchip text-4xl text-green-500 mb-3 animate-pulse"></i>
-                    <p class="font-bold text-gray-600">AI is analyzing logic, handwriting, and stress markers...</p>
+                    <p class="font-bold text-gray-600">Extracting 8-Point Cognitive Profile...</p>
                 </div>
             </div>
 
-            <!-- Extracted Form (Hidden initially) -->
             <form id="uploadForm" class="hidden space-y-6 mt-6">
                 <div class="bg-green-50 text-green-700 p-3 rounded-lg border border-green-200 text-sm font-bold flex items-center">
-                    <i class="fas fa-check-circle mr-2"></i> Scan Complete! Review extracted data below.
+                    <i class="fas fa-check-circle mr-2"></i> Scan Complete! Review extracted metrics.
                 </div>
                 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -72,14 +64,7 @@
                     <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Duration (Mins)</label><input type="number" id="time" class="custom-input" required></div>
                     <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Concept Errors</label><input type="number" id="concept" class="custom-input" required></div>
                     <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Careless Mistakes</label><input type="number" id="careless" class="custom-input" required></div>
-                    <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Logical Deduction (%)</label><input type="number" id="logical" class="custom-input" required></div>
-                    
-                    <!-- STRESS INDICATOR -->
-                    <div class="md:col-span-3 bg-rose-50 p-4 rounded-xl border border-rose-100 mt-2">
-                        <label class="block text-sm font-bold text-rose-700 mb-1"><i class="fas fa-heartbeat"></i> AI Detected Stress Indicator (1-10)</label>
-                        <p class="text-xs text-rose-500 mb-2">Calculated based on handwriting pressure, scratch-outs, and time-per-question.</p>
-                        <input type="number" id="stress" class="custom-input border-rose-200" required min="1" max="10">
-                    </div>
+                    <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Stress (1-10)</label><input type="number" id="stress" class="custom-input" required></div>
                 </div>
                 <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl transition shadow-md">Add to Student History</button>
             </form>
@@ -91,8 +76,9 @@
         const uploadArea = document.getElementById('uploadArea');
         const scanningState = document.getElementById('scanningState');
         const uploadForm = document.getElementById('uploadForm');
+        
+        let extractedThinking = {}; // Temporary holding object for the 8 types
 
-        // Simulate AI Scanning
         fileInput.addEventListener('change', function(e) {
             if(e.target.files.length > 0) {
                 uploadArea.classList.add('hidden');
@@ -102,19 +88,29 @@
                     scanningState.classList.add('hidden');
                     uploadForm.classList.remove('hidden');
                     
-                    const topics = ["Calculus", "Physics", "Chemistry", "Algebra"];
+                    const topics = ["Calculus", "Physics", "Chemistry", "Algebra", "Biology"];
                     document.getElementById('topic').value = topics[Math.floor(Math.random() * topics.length)];
                     document.getElementById('score').value = Math.floor(Math.random() * 40) + 60; 
                     document.getElementById('time').value = Math.floor(Math.random() * 30) + 30; 
                     document.getElementById('concept').value = Math.floor(Math.random() * 4);
                     document.getElementById('careless').value = Math.floor(Math.random() * 3);
-                    document.getElementById('logical').value = Math.floor(Math.random() * 30) + 70; 
                     document.getElementById('stress').value = Math.floor(Math.random() * 5) + 3; 
+
+                    // AI Simulates the 8 thinking types for this specific test
+                    extractedThinking = {
+                        critical: Math.floor(Math.random() * 40) + 50,
+                        creative: Math.floor(Math.random() * 50) + 40,
+                        analytical: Math.floor(Math.random() * 40) + 60,
+                        practical: Math.floor(Math.random() * 50) + 50,
+                        reflective: Math.floor(Math.random() * 60) + 30,
+                        convergent: Math.floor(Math.random() * 40) + 50,
+                        divergent: Math.floor(Math.random() * 50) + 40,
+                        logical: Math.floor(Math.random() * 30) + 70
+                    };
                 }, 2500);
             }
         });
 
-        // Save to Local Storage
         uploadForm.addEventListener('submit', function(e) {
             e.preventDefault();
             const newTest = {
@@ -123,8 +119,8 @@
                 time: Number(document.getElementById('time').value),
                 concept: Number(document.getElementById('concept').value),
                 careless: Number(document.getElementById('careless').value),
-                logical: Number(document.getElementById('logical').value),
                 stress: Number(document.getElementById('stress').value),
+                thinking: extractedThinking, // Saving the 8 cognitive traits
                 date: new Date().toISOString()
             };
 

@@ -6,261 +6,133 @@
     <title>Career Premium - EduMetrics</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
-        
-        body { 
-            font-family: 'Inter', sans-serif; 
-            background-color: #fafaf9; /* Warm off-white */
-            color: #1c1917;
-        }
-
-        /* Sidebar Styling */
+        body { font-family: 'Inter', sans-serif; background-color: #fafaf9; color: #1c1917; }
         aside { background: linear-gradient(180deg, #ffffff 0%, #f9fafb 100%); }
-        .nav-item { transition: all 0.2s ease-in-out; position: relative; overflow: hidden; }
-        .nav-item::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background-color: transparent; transition: background-color 0.2s; }
-        .nav-item.active { background-color: #fffbeb; color: #d97706; } /* Amber active state */
-        .nav-item.active::before { background-color: #d97706; }
-        .nav-item:not(.active):hover { background-color: #f3f4f6; color: #111827; }
-
-        /* Premium Styling Elements */
-        .premium-gradient {
-            background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .analysis-card {
-            background: white;
-            border-radius: 24px;
-            box-shadow: 0 10px 40px -10px rgba(0,0,0,0.08);
-            border: 1px solid #f5f5f4;
-            padding: 2.5rem;
-        }
-
-        .career-path-card {
-            background: white;
-            border-radius: 16px;
-            padding: 1.5rem;
-            border: 2px solid transparent;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .career-path-card::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: linear-gradient(135deg, rgba(245, 158, 11, 0.05), rgba(239, 68, 68, 0.05));
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .career-path-card:hover {
-            transform: translateY(-4px);
-            border-color: #fcd34d;
-            box-shadow: 0 15px 30px -10px rgba(245, 158, 11, 0.2);
-        }
-        
-        .career-path-card:hover::before { opacity: 1; }
-
-        /* Scanning Animation */
-        .scan-line {
-            width: 100%;
-            height: 2px;
-            background: #f59e0b;
-            position: absolute;
-            top: 0; left: 0;
-            animation: scan 2s linear infinite;
-            box-shadow: 0 0 10px #f59e0b;
-            display: none; /* Hidden by default */
-        }
-        @keyframes scan { 0% { top: 0; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
-
-        .loading-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
+        .nav-item.active { background-color: #fffbeb; color: #d97706; }
+        .career-path-card { background: white; border-radius: 16px; padding: 1.5rem; border: 2px solid #f5f5f4; transition: all 0.3s ease; }
+        .career-path-card:hover { transform: translateY(-4px); border-color: #fcd34d; box-shadow: 0 15px 30px -10px rgba(245, 158, 11, 0.2); }
     </style>
 </head>
 <body class="flex h-screen overflow-hidden">
 
-    <!-- Sidebar -->
     <aside class="w-64 border-r border-gray-200 flex flex-col shadow-sm z-10 relative">
         <div class="p-6 border-b border-gray-100 flex items-center justify-center">
              <div class="w-10 h-10 bg-gradient-to-br from-green-400 to-blue-500 rounded-lg flex items-center justify-center mr-3 shadow-md text-white font-bold text-xl">E</div>
-            <h1 class="text-2xl font-black tracking-tight text-gray-800">Edu<span class="text-green-500">Metrics</span></h1>
+            <h1 class="text-2xl font-black text-gray-800">Edu<span class="text-green-500">Metrics</span></h1>
         </div>
-        
         <nav class="flex-1 mt-6 space-y-2 px-4">
-            <a href="index.html" class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-gray-500">
-                <i class="fas fa-chart-pie w-5 text-center"></i> Dashboard
-            </a>
-            <a href="teacher.html" class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-gray-500">
-                <i class="fas fa-upload w-5 text-center"></i> Upload Data
-            </a>
-            <a href="premium.html" class="nav-item active flex items-center gap-3 px-4 py-3 rounded-xl font-bold">
-                <i class="fas fa-crown w-5 text-center"></i> Career AI
-            </a>
+            <a href="index.html" class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-gray-500"><i class="fas fa-chart-pie w-5 text-center"></i> Dashboard</a>
+            <a href="teacher.html" class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-gray-500"><i class="fas fa-camera w-5 text-center"></i> AI Scanner</a>
+            <a href="premium.html" class="nav-item active flex items-center gap-3 px-4 py-3 rounded-xl font-bold"><i class="fas fa-crown w-5 text-center text-amber-500"></i> Career Guidance</a>
         </nav>
     </aside>
 
-    <!-- Main Content -->
-    <main class="flex-1 overflow-y-auto p-8 lg:p-12 relative">
+    <main class="flex-1 overflow-y-auto p-8 lg:p-12 relative flex flex-col items-center">
         
-        <div class="max-w-4xl mx-auto">
+        <!-- THE PAYWALL SCREEN -->
+        <div id="paywallScreen" class="max-w-xl w-full bg-white rounded-3xl shadow-2xl p-10 text-center border-t-8 border-amber-500 mt-10">
+            <div class="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <i class="fas fa-lock text-3xl text-amber-500"></i>
+            </div>
+            <h2 class="text-3xl font-black mb-4">Unlock AI Career Guidance</h2>
+            <p class="text-gray-500 mb-8">Get deep psychometric mapping based on your 8 specific thinking types to find your perfect industry.</p>
             
-            <!-- Header section -->
-            <div class="text-center mb-12 relative">
-                <div class="inline-flex items-center gap-2 bg-amber-100 text-amber-700 text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-widest mb-4 shadow-sm border border-amber-200">
-                    <i class="fas fa-sparkles"></i> AI Mapping Engine
-                </div>
-                <h2 class="text-5xl font-black mt-2 mb-4 tracking-tight"><span class="premium-gradient">Cognitive</span> Career Path</h2>
-                <p class="text-gray-500 text-lg max-w-2xl mx-auto">Our system evaluates your historical exam patterns—how you think, where you rush, and what errors you make—to find industries where your specific brain works best.</p>
+            <div class="bg-gray-50 p-6 rounded-2xl mb-8 border border-gray-200">
+                <p class="text-sm font-bold text-gray-400 uppercase tracking-widest mb-2">Lifetime Access</p>
+                <h1 class="text-5xl font-black text-gray-900">₹3600</h1>
             </div>
 
-            <!-- Pre-loader / Scanner UI -->
-            <div id="scannerUI" class="analysis-card text-center relative overflow-hidden mb-8 hidden">
-                <div class="scan-line" id="scanLine"></div>
-                <div class="w-24 h-24 rounded-full bg-gray-50 flex items-center justify-center mx-auto mb-6 relative">
-                    <i class="fas fa-fingerprint text-5xl text-gray-300"></i>
-                    <div class="absolute inset-0 border-4 border-amber-400 rounded-full border-t-transparent animate-spin"></div>
-                </div>
-                <h3 class="text-xl font-bold text-gray-800 mb-2 loading-pulse">Analyzing Data History...</h3>
-                <p class="text-gray-400 text-sm">Processing logical deduction rates against careless error frequencies.</p>
+            <button onclick="processPayment()" id="payBtn" class="w-full bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-bold text-lg py-4 rounded-xl shadow-lg transition transform hover:-translate-y-1">
+                Pay Now (Simulated)
+            </button>
+        </div>
+
+        <!-- THE UNLOCKED PREMIUM CONTENT (Hidden initially) -->
+        <div id="unlockedContent" class="max-w-4xl w-full hidden">
+            <div class="text-center mb-10">
+                <span class="bg-green-100 text-green-700 text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-widest mb-4"><i class="fas fa-unlock"></i> Premium Unlocked</span>
+                <h2 class="text-4xl font-black mt-4 mb-2 tracking-tight">Psychometric Roadmap</h2>
             </div>
 
-            <!-- Results Section (Hidden until loaded) -->
-            <div id="resultsArea" class="hidden">
-                
-                <!-- Main Profile Text -->
-                <div class="analysis-card mb-8">
-                    <div class="flex items-center gap-3 mb-6">
-                        <div class="p-3 bg-amber-50 rounded-xl"><i class="fas fa-brain text-amber-500 text-xl"></i></div>
-                        <h3 class="text-2xl font-bold">Your Psychological Profile</h3>
-                    </div>
-                    <div id="profileText" class="text-lg text-gray-600 leading-relaxed border-l-4 border-amber-400 pl-6 py-2">
-                        <!-- Populated via JS -->
-                    </div>
-                </div>
-
-                <div class="flex items-center justify-between mb-6">
-                    <h3 class="text-2xl font-bold text-gray-800">Top Recommended Industries</h3>
-                    <span class="text-sm font-semibold text-amber-600 bg-amber-50 px-3 py-1 rounded-full border border-amber-100">Match Accuracy: High</span>
-                </div>
-
-                <!-- Career Cards Grid -->
-                <div id="careerGrid" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Populated via JS -->
-                </div>
+            <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 mb-8">
+                <h3 class="text-xl font-bold mb-4"><i class="fas fa-brain text-indigo-500 mr-2"></i> Cognitive Profile Analysis</h3>
+                <p id="profileText" class="text-gray-600 text-lg leading-relaxed bg-slate-50 p-5 rounded-xl border border-gray-100">Loading...</p>
             </div>
 
-            <!-- Empty State -->
-            <div id="emptyState" class="hidden bg-white rounded-2xl p-12 text-center shadow-sm border border-gray-100">
-                 <div class="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <i class="fas fa-database text-3xl text-gray-300"></i>
-                </div>
-                <h3 class="text-xl font-bold text-gray-800 mb-2">Insufficient Data</h3>
-                <p class="text-gray-500 mb-6">The AI requires at least one exam record to calculate your cognitive fingerprint.</p>
-                <a href="teacher.html" class="inline-block bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 font-bold py-2 px-6 rounded-lg shadow-sm transition">
-                    Upload Data First
-                </a>
-            </div>
-
+            <h3 class="text-2xl font-bold mb-4">AI Recommended Paths</h3>
+            <div id="careerGrid" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
         </div>
     </main>
 
     <script>
-        // Simulate an AI Scanning process for visual effect
-        const history = JSON.parse(localStorage.getItem('eduMetricsHistory')) || [];
-
-        if(history.length === 0) {
-            document.getElementById('emptyState').classList.remove('hidden');
-        } else {
-            const scanner = document.getElementById('scannerUI');
-            const results = document.getElementById('resultsArea');
+        // Simulate Payment Processing
+        function processPayment() {
+            const btn = document.getElementById('payBtn');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing Secure Payment...';
             
-            // Show scanning animation
-            scanner.classList.remove('hidden');
-            document.getElementById('scanLine').style.display = 'block';
-
-            // Wait 1.5 seconds, hide scanner, show results
             setTimeout(() => {
-                scanner.classList.add('hidden');
-                results.classList.remove('hidden');
-                
-                generateCareerLogic(history);
+                document.getElementById('paywallScreen').classList.add('hidden');
+                document.getElementById('unlockedContent').classList.remove('hidden');
+                loadCareerData();
             }, 1500);
         }
 
-        function generateCareerLogic(history) {
-            let avgLogic = 0, avgCareless = 0, avgTime = 0;
-            history.forEach(t => { avgLogic += t.logical; avgCareless += t.careless; avgTime += t.time; });
-            const count = history.length;
-            avgLogic /= count; avgCareless /= count; avgTime /= count;
-
-            let text = "", html = "";
-            const grid = document.getElementById('careerGrid');
-
-            // --- Logic Engine ---
+        // Generate Career logic based on the 8 Thinking Types
+        function loadCareerData() {
+            let history = JSON.parse(localStorage.getItem('eduMetricsHistory')) || [];
             
-            if(avgLogic >= 70) {
-                text = "<strong class='text-gray-900 block mb-2'>Systematic & Analytical Archetype</strong> Your data shows a heavy reliance on logical deduction rather than guesswork. You excel in environments governed by rules, where you can build systems or deconstruct complex problems layer by layer.";
-                
-                html += `
-                <div class="career-path-card group">
-                    <div class="flex justify-between items-start mb-4 relative z-10">
-                        <div class="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600 text-xl"><i class="fas fa-network-wired"></i></div>
-                        <span class="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded">Primary Match</span>
-                    </div>
-                    <h4 class="font-bold text-xl mb-2 text-gray-800 relative z-10">Systems Engineering</h4>
-                    <p class="text-gray-500 text-sm relative z-10">Designing structural logic frameworks, software architecture, or backend data management.</p>
-                </div>
-                
-                <div class="career-path-card group">
-                    <div class="flex justify-between items-start mb-4 relative z-10">
-                        <div class="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600 text-xl"><i class="fas fa-chart-line"></i></div>
-                    </div>
-                    <h4 class="font-bold text-xl mb-2 text-gray-800 relative z-10">Quantitative Analysis</h4>
-                    <p class="text-gray-500 text-sm relative z-10">Using mathematical modeling to predict market trends or optimize supply chains.</p>
-                </div>`;
-            } else {
-                text = "<strong class='text-gray-900 block mb-2'>Intuitive & Agile Archetype</strong> Your error patterns and speed suggest you are a fast-moving thinker. You don't get bogged down in minutiae and prefer to adapt on the fly. You thrive where creative problem-solving is valued over slow perfection.";
-                
-                html += `
-                <div class="career-path-card group">
-                    <div class="flex justify-between items-start mb-4 relative z-10">
-                        <div class="w-12 h-12 bg-pink-50 rounded-xl flex items-center justify-center text-pink-600 text-xl"><i class="fas fa-palette"></i></div>
-                        <span class="text-xs font-bold text-pink-600 bg-pink-50 px-2 py-1 rounded">Primary Match</span>
-                    </div>
-                    <h4 class="font-bold text-xl mb-2 text-gray-800 relative z-10">Creative Direction</h4>
-                    <p class="text-gray-500 text-sm relative z-10">Leading design teams, developing brand visions, and relying on instinctual choices.</p>
-                </div>
-                
-                <div class="career-path-card group">
-                    <div class="flex justify-between items-start mb-4 relative z-10">
-                        <div class="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center text-purple-600 text-xl"><i class="fas fa-bullseye"></i></div>
-                    </div>
-                    <h4 class="font-bold text-xl mb-2 text-gray-800 relative z-10">Startup Product Manager</h4>
-                    <p class="text-gray-500 text-sm relative z-10">Navigating ambiguous markets, pivoting quickly, and pushing products to launch.</p>
-                </div>`;
+            if(history.length === 0) {
+                document.getElementById('profileText').innerHTML = "No data found. Please use the AI Scanner first.";
+                return;
             }
 
-            // Secondary characteristic check
-            if(avgCareless <= 2) {
-                text += "<br><br><strong class='text-gray-900'>High-Stakes Capable:</strong> Furthermore, your exceptionally low rate of careless slips (under 2) indicates strong focus retention. You handle high-pressure execution securely.";
-                
+            // Aggregate the 8 thinking types
+            let think = { critical: 0, creative: 0, analytical: 0, practical: 0, reflective: 0, convergent: 0, divergent: 0, logical: 0 };
+            let validTests = 0;
+
+            history.forEach(test => {
+                if(test.thinking) {
+                    validTests++;
+                    Object.keys(think).forEach(k => think[k] += test.thinking[k]);
+                }
+            });
+
+            if(validTests === 0) {
+                document.getElementById('profileText').innerHTML = "Older data detected. Please scan a new test to extract the 8 thinking types.";
+                return;
+            }
+
+            Object.keys(think).forEach(k => think[k] = Math.round(think[k] / validTests));
+
+            let text = "";
+            let html = "";
+            const grid = document.getElementById('careerGrid');
+
+            // Advanced AI Logic based on the 8 types
+            if(think.analytical > 65 && think.logical > 65) {
+                text = "Your profile shows dominant <strong>Analytical</strong> and <strong>Logical</strong> thinking. You naturally excel at breaking down complex systems and finding convergent solutions.";
                 html += `
-                <div class="career-path-card md:col-span-2 group">
-                    <div class="flex items-center gap-4 mb-3 relative z-10">
-                         <div class="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600 text-xl"><i class="fas fa-heartbeat"></i></div>
-                         <div>
-                            <span class="text-xs font-bold text-emerald-600 uppercase tracking-wider mb-1 block">Bonus Modifier Path</span>
-                            <h4 class="font-bold text-xl text-gray-800">Precision / Medical Operations</h4>
-                        </div>
-                    </div>
-                    <p class="text-gray-500 text-sm relative z-10 ml-16">Because you rarely make silly errors under test conditions, fields like surgery, aviation, or legal contract analysis are highly viable.</p>
+                <div class="career-path-card">
+                    <div class="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600 text-xl mb-4"><i class="fas fa-database"></i></div>
+                    <h4 class="font-bold text-xl mb-2 text-gray-800">Data Scientist</h4>
+                    <p class="text-gray-500 text-sm">Requires high analytical and convergent thinking to derive facts from numbers.</p>
+                </div>`;
+            } else if (think.creative > 60 && think.divergent > 60) {
+                text = "Your profile shows dominant <strong>Creative</strong> and <strong>Divergent</strong> thinking. You naturally generate multiple unique solutions to a single problem.";
+                html += `
+                <div class="career-path-card">
+                    <div class="w-12 h-12 bg-pink-50 rounded-xl flex items-center justify-center text-pink-600 text-xl mb-4"><i class="fas fa-paint-brush"></i></div>
+                    <h4 class="font-bold text-xl mb-2 text-gray-800">UX/UI Designer</h4>
+                    <p class="text-gray-500 text-sm">Requires heavy divergent thinking to conceptualize user experiences.</p>
+                </div>`;
+            } else {
+                text = "Your profile is highly balanced, showing strong <strong>Practical</strong> and <strong>Reflective</strong> thinking. You are an executor who learns rapidly from past actions.";
+                html += `
+                <div class="career-path-card">
+                    <div class="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600 text-xl mb-4"><i class="fas fa-tasks"></i></div>
+                    <h4 class="font-bold text-xl mb-2 text-gray-800">Project Manager</h4>
+                    <p class="text-gray-500 text-sm">Requires high practical thinking to execute tasks and manage teams efficiently.</p>
                 </div>`;
             }
 

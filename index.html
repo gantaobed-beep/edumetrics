@@ -31,46 +31,43 @@
 
     <main class="flex-1 overflow-y-auto p-8 lg:p-12">
         <div class="max-w-7xl mx-auto">
-            <header class="mb-10">
-                <h2 class="text-4xl font-black tracking-tight">Performance History</h2>
-                <p class="text-gray-500 mt-2">Aggregated from all past scanned assessments.</p>
+            
+            <header class="mb-8 flex justify-between items-end">
+                <div>
+                    <h2 class="text-4xl font-black tracking-tight">Diagnostic Dashboard</h2>
+                    <p class="text-gray-500 mt-1">Live cognitive tracking.</p>
+                </div>
             </header>
 
-            <!-- KPI Cards (Now including Stress) -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-                <div class="glass-card p-6 border-l-4 border-l-blue-500">
-                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Historical Avg Score</h3>
-                    <h2 id="avgScore" class="text-4xl font-black text-gray-800">--%</h2>
+            <!-- Auto Practice Generator Box -->
+            <div id="practiceBox" class="hidden bg-gradient-to-r from-indigo-600 to-purple-700 rounded-2xl p-6 text-white shadow-lg mb-8 flex flex-col md:flex-row items-center justify-between">
+                <div>
+                    <h3 class="text-xl font-bold mb-1"><i class="fas fa-magic text-yellow-300 mr-2"></i> Auto-Practice Generated</h3>
+                    <p id="practiceText" class="text-indigo-100 text-sm">Analyzing weaknesses...</p>
                 </div>
-                <div class="glass-card p-6 border-l-4 border-l-emerald-500">
-                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Overall Logic Focus</h3>
-                    <h2 id="avgLogic" class="text-4xl font-black text-gray-800">--%</h2>
-                </div>
-                <div class="glass-card p-6 border-l-4 border-l-rose-500">
-                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Avg Stress Level</h3>
-                    <div class="flex items-end gap-2">
-                        <h2 id="avgStress" class="text-4xl font-black text-gray-800">--</h2>
-                        <span class="text-sm font-bold text-gray-400 mb-1">/ 10</span>
-                    </div>
-                </div>
-                <div class="glass-card p-6 border-l-4 border-l-amber-500">
-                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Total Exams Analyzed</h3>
-                    <h2 id="testCount" class="text-4xl font-black text-gray-800">0</h2>
-                </div>
+                <button class="mt-4 md:mt-0 bg-white text-indigo-700 font-bold px-6 py-3 rounded-xl shadow-md hover:scale-105 transition transform">
+                    Start Custom Test
+                </button>
             </div>
 
-            <!-- Charts Grid -->
+            <!-- Charts Area -->
             <div id="chartsArea" class="grid grid-cols-1 lg:grid-cols-2 gap-8 hidden">
+                
+                <!-- NEW: 8 Types of Thinking Bar Graph (Full Width) -->
+                <div class="glass-card p-6 lg:col-span-2">
+                    <h3 class="font-bold text-gray-800 text-lg mb-4 text-center">Cognitive Profile Breakdown (8 Types of Thinking)</h3>
+                    <div class="relative h-72"><canvas id="thinkingChart"></canvas></div>
+                </div>
+
+                <!-- History Line Chart -->
                 <div class="glass-card p-6">
                     <h3 class="font-bold text-gray-800 text-lg mb-4 text-center">Historical Score Trend</h3>
                     <div class="relative h-64"><canvas id="historyChart"></canvas></div>
                 </div>
+
+                <!-- Stress Scatter -->
                 <div class="glass-card p-6">
-                     <h3 class="font-bold text-gray-800 text-lg mb-4 text-center">All-Time Error Distribution</h3>
-                    <div class="relative h-64"><canvas id="pieChart"></canvas></div>
-                </div>
-                <div class="glass-card p-6 lg:col-span-2">
-                    <h3 class="font-bold text-gray-800 text-lg mb-4 text-center">Stress vs. Score Matrix (All Tests)</h3>
+                    <h3 class="font-bold text-gray-800 text-lg mb-4 text-center">Stress vs. Score Matrix</h3>
                     <div class="relative h-64"><canvas id="stressChart"></canvas></div>
                 </div>
             </div>
@@ -94,55 +91,79 @@
             document.getElementById('emptyState').classList.remove('hidden');
         } else {
             document.getElementById('chartsArea').classList.remove('hidden');
+            document.getElementById('practiceBox').classList.remove('hidden');
 
-            let tScore = 0, tLogic = 0, tStress = 0, tConcept = 0, tCareless = 0;
             let labels = [], scores = [], stressData = [];
+            let topicsData = {};
+            
+            // Averages for the 8 thinking types
+            let avgThink = { critical: 0, creative: 0, analytical: 0, practical: 0, reflective: 0, convergent: 0, divergent: 0, logical: 0 };
 
             historyData.forEach((test, index) => {
-                tScore += test.score; tLogic += test.logical; 
-                tConcept += test.concept; tCareless += test.careless;
-                
-                // Fallback for older tests that didn't have stress
-                let testStress = test.stress || 5; 
-                tStress += testStress;
-
-                labels.push(`Test ${index + 1} (${test.topic})`);
+                labels.push(`Test ${index + 1}`);
                 scores.push(test.score);
-                stressData.push({ x: testStress, y: test.score }); // For scatter plot
+                stressData.push({ x: test.stress || 5, y: test.score });
+                
+                // Aggregate errors by topic
+                if(!topicsData[test.topic]) topicsData[test.topic] = 0;
+                topicsData[test.topic] += (test.concept + test.careless);
+
+                // Aggregate thinking types (handling older tests that might not have it)
+                if(test.thinking) {
+                    avgThink.critical += test.thinking.critical;
+                    avgThink.creative += test.thinking.creative;
+                    avgThink.analytical += test.thinking.analytical;
+                    avgThink.practical += test.thinking.practical;
+                    avgThink.reflective += test.thinking.reflective;
+                    avgThink.convergent += test.thinking.convergent;
+                    avgThink.divergent += test.thinking.divergent;
+                    avgThink.logical += test.thinking.logical;
+                }
             });
 
             const count = historyData.length;
             
-            document.getElementById('avgScore').innerText = Math.round(tScore/count) + '%';
-            document.getElementById('avgLogic').innerText = Math.round(tLogic/count) + '%';
-            document.getElementById('avgStress').innerText = (tStress/count).toFixed(1);
-            document.getElementById('testCount').innerText = count;
+            // Calculate final averages for thinking
+            Object.keys(avgThink).forEach(key => avgThink[key] = Math.round(avgThink[key] / count) || 60);
 
-            // 1. Line Chart (Progress over time)
+            // --- FIND WEAKNESSES FOR AUTO PRACTICE ---
+            let weakestTopic = Object.keys(topicsData).reduce((a, b) => topicsData[a] > topicsData[b] ? a : b);
+            let weakestThinking = Object.keys(avgThink).reduce((a, b) => avgThink[a] < avgThink[b] ? a : b);
+            
+            // Capitalize the thinking type word
+            weakestThinking = weakestThinking.charAt(0).toUpperCase() + weakestThinking.slice(1);
+
+            document.getElementById('practiceText').innerHTML = `You are backward in <strong>${weakestTopic}</strong>, specifically struggling with <strong>${weakestThinking} Thinking</strong>. We have generated a custom quiz to help you improve.`;
+
+            // --- DRAW CHARTS ---
+
+            // 1. New 8-Type Bar Graph
+            new Chart(document.getElementById('thinkingChart').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: ['Critical', 'Creative', 'Analytical', 'Practical', 'Reflective', 'Convergent', 'Divergent', 'Logical'],
+                    datasets: [{
+                        label: 'Cognitive Score (%)',
+                        data: [avgThink.critical, avgThink.creative, avgThink.analytical, avgThink.practical, avgThink.reflective, avgThink.convergent, avgThink.divergent, avgThink.logical],
+                        backgroundColor: ['#ef4444', '#f97316', '#f59e0b', '#84cc16', '#10b981', '#06b6d4', '#3b82f6', '#8b5cf6'],
+                        borderRadius: 6
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { min: 0, max: 100 } } }
+            });
+
+            // 2. Line Chart
             new Chart(document.getElementById('historyChart').getContext('2d'), { 
                 type: 'line', 
                 data: { labels: labels, datasets: [{ label: 'Score', data: scores, borderColor: '#10b981', tension: 0.4, fill: true, backgroundColor: 'rgba(16,185,129,0.1)' }] },
                 options: { responsive: true, maintainAspectRatio: false, scales: { y: { min: 0, max: 100 } } }
             });
 
-            // 2. Pie Chart (All-time errors)
-            new Chart(document.getElementById('pieChart').getContext('2d'), { 
-                type: 'pie', 
-                data: { labels: ['Total Concept Errors', 'Total Careless Errors'], datasets: [{ data: [tConcept, tCareless], backgroundColor: ['#8b5cf6', '#fbbf24'] }] },
-                options: { responsive: true, maintainAspectRatio: false }
-            });
-
-            // 3. Scatter Chart (Stress vs Score)
+            // 3. Scatter Chart
             new Chart(document.getElementById('stressChart').getContext('2d'), {
                 type: 'scatter',
                 data: { datasets: [{ label: 'Tests', data: stressData, backgroundColor: '#f43f5e', pointRadius: 6 }] },
-                options: { 
-                    responsive: true, maintainAspectRatio: false,
-                    scales: { 
-                        x: { title: {display: true, text: 'Stress Level (1-10)'}, min: 0, max: 10 }, 
-                        y: { title: {display: true, text: 'Score (%)'}, min: 0, max: 100 } 
-                    } 
-                }
+                options: { responsive: true, maintainAspectRatio: false, scales: { x: { title: {display: true, text: 'Stress Level'}, min: 0, max: 10 }, y: { title: {display: true, text: 'Score'}, min: 0, max: 100 } } }
             });
         }
     </script>
