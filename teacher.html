@@ -24,7 +24,7 @@
 <body class="flex h-screen overflow-hidden">
 
     <!-- Sidebar -->
-    <aside class="w-64 border-r border-gray-200 flex flex-col shadow-sm z-10 relative">
+    <aside class="w-64 border-r border-gray-200 flex flex-col shadow-sm z-10 relative bg-white">
         <div class="p-6 border-b border-gray-100 flex items-center justify-center">
              <div class="w-10 h-10 bg-gradient-to-br from-green-400 to-blue-500 rounded-lg flex items-center justify-center mr-3 shadow-md text-white font-bold text-xl">E</div>
             <h1 class="text-2xl font-black tracking-tight text-gray-800">Edu<span class="text-green-500">Metrics</span></h1>
@@ -42,7 +42,7 @@
             
             <div class="text-center mb-8">
                 <h2 class="text-4xl font-black text-gray-800 tracking-tight">AI Answer Sheet Scanner</h2>
-                <p class="text-gray-500 mt-2 font-medium">Bulk upload images for question-by-question analysis.</p>
+                <p class="text-gray-500 mt-2 font-medium">Bulk upload images for question-by-question analysis & predictions.</p>
             </div>
 
             <!-- PHASE 1: UPLOAD -->
@@ -71,7 +71,7 @@
                 <div class="scanning-laser"></div>
                 <i class="fas fa-microchip text-5xl text-green-500 mb-4 animate-pulse"></i>
                 <h3 class="text-2xl font-bold text-gray-800 mb-2">Analyzing <span id="imageCountText" class="text-indigo-600">0</span> Images...</h3>
-                <p class="text-gray-500 font-medium">Extracting handwriting, verifying logic, and categorizing errors.</p>
+                <p class="text-gray-500 font-medium">Extracting handwriting, verifying logic, and predicting future errors.</p>
             </div>
 
             <!-- PHASE 3: VERIFICATION CARDS -->
@@ -103,45 +103,25 @@
         
         let uploadedFiles = [];
 
-        // Exact Demo Data for your presentation!
-        const demoAnalysisData = [
-            {
-                topic: "Physics - Energy",
-                question: "Calculate the Kinetic Energy of a 4kg object moving at 3 m/s.",
-                correct: "18 Joules",
-                student: "6 Joules",
-                mistake: "Conceptual",
-                guessed: false,
-                steps: "Concept Error: Used KE = 1/2*m*v instead of KE = 1/2*m*v². Failed to square the velocity."
-            },
-            {
-                topic: "Geometry",
-                question: "Find the hypotenuse (c) of a right triangle where side a = 6 and side b = 8.",
-                correct: "10",
-                student: "50",
-                mistake: "Careless",
-                guessed: false,
-                steps: "Careless Error: Correctly calculated c² = 100, but divided by 2 instead of taking the square root."
-            },
-            {
-                topic: "Algebra",
-                question: "Solve for x: 2(x + 3) = 14",
-                correct: "4",
-                student: "5.5",
-                mistake: "Conceptual",
-                guessed: false,
-                steps: "Failed to distribute the 2 to the 3. Wrote 2x + 3 = 14 instead of 2x + 6 = 14."
-            },
-            {
-                topic: "Calculus",
-                question: "Evaluate the integral of x*sin(x) dx.",
-                correct: "-x*cos(x) + sin(x) + C",
-                student: "-x*cos(x) + sin(x) + C",
-                mistake: "None",
-                guessed: false,
-                steps: "Perfect execution of integration by parts."
-            }
+        // A large dynamic pool so it doesn't look fixed every time!
+        const plausibleScenarios = [
+            { topic: "Physics - Energy", question: "Calculate KE of a 4kg object moving at 3 m/s.", correct: "18 J", student: "6 J", mistake: "Conceptual", guessed: false, steps: "Used KE=1/2*m*v. Failed to square velocity.", pred: "Likely to miss exponents in future quadratic formulas like Spring Potential Energy." },
+            { topic: "Geometry", question: "Find hypotenuse (c) if a=6, b=8.", correct: "10", student: "50", mistake: "Careless", guessed: false, steps: "Calculated c²=100, but divided by 2 instead of taking square root.", pred: "Prone to rushing final computational steps. May drop points at the very end of long problems." },
+            { topic: "Algebra", question: "Solve for x: 2(x + 3) = 14", correct: "4", student: "5.5", mistake: "Conceptual", guessed: false, steps: "Failed to distribute 2 to the 3. Wrote 2x+3=14.", pred: "Will likely struggle with complex bracket expansions and negative sign distributions." },
+            { topic: "Chemistry", question: "Moles in 50g of NaCl? (MM=58.44)", correct: "0.85 mol", student: "2922 mol", mistake: "Conceptual", guessed: false, steps: "Multiplied mass by molar mass instead of dividing.", pred: "Unit conversion weakness. High risk of failing stoichiometry limiting-reagent questions." },
+            { topic: "Calculus", question: "Derivative of x² * sin(x)", correct: "2x*sin(x) + x²*cos(x)", student: "2x*cos(x)", mistake: "Conceptual", guessed: false, steps: "Failed to use the Product Rule. Just derived components individually.", pred: "Will likely fail Quotient Rule and Chain Rule applications due to fundamental misunderstanding." },
+            { topic: "Trigonometry", question: "Find sin(30°)", correct: "0.5", student: "0.5", mistake: "None", guessed: true, steps: "Correct answer, but workings look heavily erased and uncertain.", pred: "Foundational knowledge is shaky. Likely guessing standard unit circle values." },
+            { topic: "Physics - Kinematics", question: "Final velocity if a=9.8, t=3s, vi=0", correct: "29.4 m/s", student: "29.4", mistake: "None", guessed: false, steps: "Perfect substitution into v = vi + at.", pred: "Strong grasp. May only struggle if initial velocity is non-zero or negative." }
         ];
+
+        // Shuffle function to randomize the pool
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
 
         // Drag & Drop Handlers
         dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
@@ -167,24 +147,22 @@
             }, 2500);
         }
 
-        // Generate the beautiful verification cards using our specific Demo Data
         function generateCards() {
             cardsContainer.innerHTML = ''; 
             
+            // Randomize our scenarios for this batch
+            let currentBatchScenarios = shuffleArray([...plausibleScenarios]);
+            
             uploadedFiles.forEach((file, index) => {
                 const imageUrl = URL.createObjectURL(file);
-                
-                // Pull from our exact list, or use a default if they upload more than 4 images
-                const aiData = demoAnalysisData[index] || {
-                    topic: "General Math", question: "Solve the equation.", correct: "100", student: "85", mistake: "Practice", guessed: true, steps: "Needs more practice on fundamental concepts."
-                };
-
+                // Use a scenario from the shuffled list, wrap around if they upload more than 7 images
+                const aiData = currentBatchScenarios[index % currentBatchScenarios.length];
                 addCardHTML(imageUrl, index + 1, aiData);
             });
         }
 
         function addBlankCard() {
-            const blankData = { topic: "", question: "", correct: "", student: "", mistake: "None", guessed: false, steps: "" };
+            const blankData = { topic: "", question: "", correct: "", student: "", mistake: "None", guessed: false, steps: "", pred: "" };
             addCardHTML('', document.querySelectorAll('.q-card').length + 1, blankData, true);
         }
 
@@ -220,10 +198,10 @@
                             </div>
                         </div>
 
-                        <div class="bg-gray-50 border border-gray-200 p-4 rounded-xl relative">
-                            <label class="block text-[11px] font-black text-gray-700 uppercase tracking-widest mb-3">Diagnostic Details <i class="fas fa-hand-pointer text-yellow-500"></i></label>
+                        <div class="bg-gray-50 border border-gray-200 p-4 rounded-xl relative space-y-3">
+                            <label class="block text-[11px] font-black text-gray-700 uppercase tracking-widest">Diagnostic Details & Predictions <i class="fas fa-magic text-indigo-500"></i></label>
                             
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-3">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <select class="card-mistake input-field bg-white font-bold ${isError ? 'text-red-600 border-red-300' : 'text-green-600 border-green-300'}" onchange="this.className = this.value === 'None' ? 'card-mistake input-field bg-white font-bold text-green-600 border-green-300' : 'card-mistake input-field bg-white font-bold text-red-600 border-red-300'">
                                     <option value="None" ${data.mistake === 'None' ? 'selected' : ''}>No Mistake (Correct)</option>
                                     <option value="Conceptual" ${data.mistake === 'Conceptual' ? 'selected' : ''}>Conceptual Error</option>
@@ -239,6 +217,12 @@
                             </div>
                             
                             <textarea class="card-steps input-field bg-white text-sm" rows="1" placeholder="Enter solution steps or specific feedback here...">${data.steps}</textarea>
+                            
+                            <!-- THE NEW ERROR PREDICTION FIELD -->
+                            <div class="relative">
+                                <span class="absolute top-2 left-2 text-amber-500"><i class="fas fa-bolt"></i></span>
+                                <textarea class="card-prediction input-field bg-amber-50 border-amber-200 text-amber-900 text-sm pl-8 font-medium" rows="1" placeholder="AI Future Mistake Prediction...">${data.pred}</textarea>
+                            </div>
                         </div>
                     </div>
                     <button type="button" onclick="this.closest('.q-card').remove()" class="absolute top-4 right-4 text-gray-300 hover:text-red-500 transition"><i class="fas fa-times"></i></button>
@@ -273,11 +257,11 @@
                     mistakeType: mistakeType,
                     guessed: card.querySelector('.card-guessed').checked,
                     steps: card.querySelector('.card-steps').value,
+                    prediction: card.querySelector('.card-prediction').value, // Saving the prediction!
                     isCorrect: isCorrect
                 });
             });
 
-            // Package into a single "Test" object
             const newTest = {
                 id: Date.now(),
                 subject: subject,
