@@ -3,212 +3,250 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Teacher Scanner - EduMetrics</title>
+    <title>AI Scanner - EduMetrics</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f0fdf4; color: #1f2937; }
         aside { background: linear-gradient(180deg, #ffffff 0%, #f9fafb 100%); }
         .nav-item.active { background-color: #eef2ff; color: #4f46e5; }
-        .glass-panel { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-radius: 20px; box-shadow: 0 20px 40px -15px rgba(0,0,0,0.1); }
+        .glass-panel { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid rgba(255, 255, 255, 0.6); }
+        .input-field { width: 100%; padding: 0.5rem 0.75rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; outline: none; transition: all 0.2s; background: #ffffff; color: #334155; font-weight: 500;}
+        .input-field:focus { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1); }
+        
+        .drop-zone { border: 2px dashed #a78bfa; transition: all 0.3s; cursor: pointer; }
+        .drop-zone:hover, .drop-zone.dragover { background-color: #f5f3ff; border-color: #7c3aed; }
+        
         .scanning-laser { width: 100%; height: 2px; background-color: #10b981; position: absolute; top: 0; left: 0; box-shadow: 0 0 10px #10b981; animation: scan 2s linear infinite; }
         @keyframes scan { 0% { top: 0; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
     </style>
 </head>
 <body class="flex h-screen overflow-hidden">
 
+    <!-- Sidebar -->
     <aside class="w-64 border-r border-gray-200 flex flex-col shadow-sm z-10 relative">
         <div class="p-6 border-b border-gray-100 flex items-center justify-center">
              <div class="w-10 h-10 bg-gradient-to-br from-green-400 to-blue-500 rounded-lg flex items-center justify-center mr-3 shadow-md text-white font-bold text-xl">E</div>
-            <h1 class="text-2xl font-black text-gray-800">Edu<span class="text-green-500">Metrics</span></h1>
+            <h1 class="text-2xl font-black tracking-tight text-gray-800">Edu<span class="text-green-500">Metrics</span></h1>
         </div>
         <nav class="flex-1 mt-6 space-y-2 px-4">
-            <a href="index.html" class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-gray-500"><i class="fas fa-chart-pie w-5 text-center"></i> Dashboard</a>
-            <a href="teacher.html" class="nav-item active flex items-center gap-3 px-4 py-3 rounded-xl font-bold"><i class="fas fa-camera w-5 text-center text-indigo-500"></i> AI Scanner</a>
-            <a href="premium.html" class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-gray-500"><i class="fas fa-compass w-5 text-center text-amber-400"></i> Career Guidance</a>
+            <a href="index.html" class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-gray-500 transition"><i class="fas fa-chart-pie w-5 text-center"></i> Dashboard</a>
+            <a href="teacher.html" class="nav-item active flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition"><i class="fas fa-camera w-5 text-center text-indigo-500"></i> AI Scanner</a>
+            <a href="premium.html" class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-gray-500 transition"><i class="fas fa-compass w-5 text-center text-amber-400"></i> Career Guidance</a>
         </nav>
     </aside>
 
-    <main class="flex-1 overflow-y-auto p-8 flex items-center justify-center">
-        <div class="glass-panel p-8 w-full max-w-4xl border-t-8 border-t-indigo-500 relative">
+    <!-- Main Content -->
+    <main class="flex-1 overflow-y-auto p-8 flex items-start justify-center bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]">
+        <div class="w-full max-w-4xl">
             
-            <div class="text-center mb-6">
-                <h2 class="text-3xl font-black text-gray-800">AI Scanner & Verification</h2>
-                <p class="text-gray-500">Scan and verify question-by-question analysis.</p>
+            <div class="text-center mb-8">
+                <h2 class="text-4xl font-black text-gray-800 tracking-tight">AI Answer Sheet Scanner</h2>
+                <p class="text-gray-500 mt-2 font-medium">Bulk upload images for question-by-question analysis.</p>
             </div>
 
-            <!-- Pre-Scan Context -->
-            <div id="preScan" class="bg-indigo-50 p-6 rounded-xl border border-indigo-100 mb-6 text-center">
-                <label class="block text-sm font-bold text-indigo-800 mb-2">1. Set Subject Context</label>
-                <select id="subjectContext" class="w-full max-w-xs p-3 rounded-lg border border-indigo-200 font-bold text-gray-700 mb-4 mx-auto block">
-                    <option value="Mathematics">Mathematics</option>
-                    <option value="Physics">Physics</option>
-                    <option value="Chemistry">Chemistry</option>
-                    <option value="Biology">Biology</option>
-                    <option value="Computer Science">Computer Science</option>
-                </select>
-                
-                <div class="border-2 dashed border-indigo-300 rounded-xl p-8 bg-white cursor-pointer hover:bg-indigo-50 transition" onclick="document.getElementById('fileInput').click()">
-                    <i class="fas fa-cloud-upload-alt text-4xl text-indigo-400 mb-2"></i>
-                    <h3 class="font-bold text-gray-700">2. Click to Upload Answer Sheet</h3>
-                    <input type="file" id="fileInput" class="hidden" accept="image/*,.pdf">
+            <!-- PHASE 1: UPLOAD -->
+            <div id="uploadPhase" class="glass-panel p-8 border-t-8 border-t-indigo-500">
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Student Name</label>
+                        <input type="text" id="globalStudent" class="input-field" value="Obed Ganta">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Subject</label>
+                        <input type="text" id="globalSubject" class="input-field" placeholder="e.g. Mathematics">
+                    </div>
+                </div>
+
+                <div id="dropZone" class="drop-zone rounded-2xl p-16 text-center bg-indigo-50/50" onclick="document.getElementById('fileInput').click()">
+                    <i class="fas fa-cloud-upload-alt text-5xl text-indigo-400 mb-4"></i>
+                    <h3 class="text-xl font-bold text-gray-800">Click or Drag images here</h3>
+                    <p class="text-sm text-gray-500 mt-2">Upload multiple answer sheets at once.</p>
+                    <input type="file" id="fileInput" multiple accept="image/*" class="hidden">
                 </div>
             </div>
 
-            <!-- Scanning State -->
-            <div id="scanningState" class="hidden relative h-48 bg-gray-100 rounded-xl flex items-center justify-center border border-gray-200 mb-6">
+            <!-- PHASE 2: SCANNING -->
+            <div id="scanningPhase" class="hidden glass-panel p-16 text-center relative overflow-hidden">
                 <div class="scanning-laser"></div>
-                <div class="text-center">
-                    <i class="fas fa-microchip text-4xl text-green-500 mb-3 animate-pulse"></i>
-                    <p class="font-bold text-gray-600">AI reading handwriting & analyzing errors...</p>
-                </div>
+                <i class="fas fa-microchip text-5xl text-green-500 mb-4 animate-pulse"></i>
+                <h3 class="text-2xl font-bold text-gray-800 mb-2">Analyzing <span id="imageCountText" class="text-indigo-600">0</span> Images...</h3>
+                <p class="text-gray-500 font-medium">Extracting handwriting, verifying logic, and categorizing errors.</p>
             </div>
 
-            <!-- Verification Table -->
-            <div id="verificationState" class="hidden">
-                <div class="bg-amber-50 text-amber-800 p-3 rounded-lg border border-amber-200 text-sm font-bold flex items-center mb-4">
-                    <i class="fas fa-exclamation-triangle mr-2"></i> AI Extracted Data. Please verify question breakdowns before saving.
-                </div>
-                
-                <div class="flex justify-between items-end mb-2">
-                    <div>
-                        <span class="text-xs font-bold text-gray-500 uppercase">Subject</span>
-                        <h3 id="displaySubject" class="text-xl font-bold text-indigo-700">Math</h3>
-                    </div>
-                    <div>
-                        <label class="text-xs font-bold text-gray-500 uppercase block">Time Taken (Mins)</label>
-                        <input type="number" id="totalTime" value="45" class="p-2 border rounded font-bold w-24 text-center">
-                    </div>
+            <!-- PHASE 3: VERIFICATION CARDS -->
+            <form id="verificationPhase" class="hidden space-y-6">
+                <div class="bg-indigo-50 border border-indigo-200 text-indigo-800 px-4 py-3 rounded-xl flex items-center justify-between font-semibold shadow-sm">
+                    <span><i class="fas fa-check-circle mr-2 text-indigo-600"></i> AI Extraction complete. Please verify the details.</span>
+                    <button type="button" onclick="addBlankCard()" class="text-sm bg-white border border-indigo-200 px-3 py-1 rounded-lg hover:bg-indigo-100 transition">+ Add Manual Q</button>
                 </div>
 
-                <div class="overflow-x-auto bg-white rounded-xl border border-gray-200 mb-6">
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="bg-gray-50 text-gray-600 text-sm uppercase tracking-wider">
-                                <th class="p-4 border-b">Q#</th>
-                                <th class="p-4 border-b">Sub-Topic</th>
-                                <th class="p-4 border-b">Status</th>
-                                <th class="p-4 border-b">Error Type</th>
-                            </tr>
-                        </thead>
-                        <tbody id="questionTableBody">
-                            <!-- Populated by JS -->
-                        </tbody>
-                    </table>
+                <div id="cardsContainer" class="space-y-6">
+                    <!-- Cards injected here via JS -->
                 </div>
 
-                <button onclick="saveData()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl shadow-md transition">Confirm & Save Analysis</button>
-            </div>
+                <button type="submit" class="w-full bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white font-bold py-4 rounded-xl shadow-lg transition transform hover:-translate-y-1 text-lg">
+                    Save Question Analysis to Dashboard
+                </button>
+            </form>
+
         </div>
     </main>
 
     <script>
-        // Simulate Question Data
-        function generateMockQuestions(subject) {
-            const numQuestions = Math.floor(Math.random() * 3) + 3; // 3 to 5 questions
-            const topics = {
-                "Mathematics": ["Algebra", "Geometry", "Calculus", "Trigonometry"],
-                "Physics": ["Kinematics", "Thermodynamics", "Electromagnetism"],
-                "Chemistry": ["Stoichiometry", "Atomic Structure", "Kinetics"]
-            };
-            const subtopics = topics[subject] || ["General"];
-            
-            let questions = [];
-            for(let i=1; i<=numQuestions; i++) {
-                let isCorrect = Math.random() > 0.4;
-                questions.push({
-                    id: i,
-                    topic: subtopics[Math.floor(Math.random() * subtopics.length)],
-                    correct: isCorrect,
-                    errorType: isCorrect ? "None" : ["Concept", "Careless", "Formula", "Time"][Math.floor(Math.random() * 4)]
-                });
-            }
-            return questions;
-        }
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const uploadPhase = document.getElementById('uploadPhase');
+        const scanningPhase = document.getElementById('scanningPhase');
+        const verificationPhase = document.getElementById('verificationPhase');
+        const cardsContainer = document.getElementById('cardsContainer');
+        
+        let uploadedFiles = [];
 
-        document.getElementById('fileInput').addEventListener('change', function(e) {
-            if(e.target.files.length > 0) {
-                document.getElementById('preScan').classList.add('hidden');
-                document.getElementById('scanningState').classList.remove('hidden');
-                
-                setTimeout(() => {
-                    document.getElementById('scanningState').classList.add('hidden');
-                    document.getElementById('verificationState').classList.remove('hidden');
-                    
-                    const subject = document.getElementById('subjectContext').value;
-                    document.getElementById('displaySubject').innerText = subject;
-                    
-                    const questions = generateMockQuestions(subject);
-                    const tbody = document.getElementById('questionTableBody');
-                    tbody.innerHTML = '';
-                    
-                    questions.forEach(q => {
-                        let statusColor = q.correct ? 'text-green-600 bg-green-50' : 'text-red-600 bg-red-50';
-                        tbody.innerHTML += `
-                            <tr class="border-b q-row">
-                                <td class="p-4 font-bold text-gray-700">Q${q.id}</td>
-                                <td class="p-4"><input type="text" class="q-topic border p-2 rounded w-full" value="${q.topic}"></td>
-                                <td class="p-4">
-                                    <select class="q-status border p-2 rounded font-bold ${statusColor}" onchange="updateColor(this)">
-                                        <option value="Correct" ${q.correct ? 'selected' : ''}>Correct</option>
-                                        <option value="Incorrect" ${!q.correct ? 'selected' : ''}>Incorrect</option>
-                                    </select>
-                                </td>
-                                <td class="p-4">
-                                    <select class="q-error border p-2 rounded w-full">
-                                        <option value="None" ${q.errorType === 'None' ? 'selected' : ''}>None</option>
-                                        <option value="Concept" ${q.errorType === 'Concept' ? 'selected' : ''}>Concept Misunderstanding</option>
-                                        <option value="Careless" ${q.errorType === 'Careless' ? 'selected' : ''}>Careless Mistake</option>
-                                        <option value="Formula" ${q.errorType === 'Formula' ? 'selected' : ''}>Wrong Formula</option>
-                                    </select>
-                                </td>
-                            </tr>
-                        `;
-                    });
-                }, 2000);
-            }
+        // Drag & Drop Handlers
+        dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault(); dropZone.classList.remove('dragover');
+            handleFiles(e.dataTransfer.files);
         });
+        fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
 
-        function updateColor(select) {
-            if(select.value === 'Correct') { select.className = 'q-status border p-2 rounded font-bold text-green-600 bg-green-50'; } 
-            else { select.className = 'q-status border p-2 rounded font-bold text-red-600 bg-red-50'; }
+        function handleFiles(files) {
+            if (files.length === 0) return;
+            uploadedFiles = Array.from(files);
+            document.getElementById('imageCountText').innerText = uploadedFiles.length;
+
+            uploadPhase.classList.add('hidden');
+            scanningPhase.classList.remove('hidden');
+
+            setTimeout(() => {
+                generateCards();
+                scanningPhase.classList.add('hidden');
+                verificationPhase.classList.remove('hidden');
+            }, 2500);
         }
 
-        function saveData() {
-            let totalQ = 0;
-            let correctQ = 0;
-            let errors = { "Concept": 0, "Careless": 0, "Formula": 0 };
+        // Generate the beautiful verification cards
+        function generateCards() {
+            cardsContainer.innerHTML = ''; 
+            const defaultTopics = ["Calculus", "Algebra", "Geometry"];
             
-            document.querySelectorAll('.q-row').forEach(row => {
-                totalQ++;
-                let status = row.querySelector('.q-status').value;
-                let error = row.querySelector('.q-error').value;
-                
-                if(status === 'Correct') correctQ++;
-                else if(error !== 'None' && errors[error] !== undefined) errors[error]++;
+            uploadedFiles.forEach((file, index) => {
+                const imageUrl = URL.createObjectURL(file);
+                const isError = Math.random() > 0.4; // Simulate AI finding mistakes
+                const topic = defaultTopics[Math.floor(Math.random() * defaultTopics.length)];
+
+                addCardHTML(imageUrl, index + 1, topic, isError);
+            });
+        }
+
+        function addBlankCard() {
+            addCardHTML('', document.querySelectorAll('.q-card').length + 1, '', true, true);
+        }
+
+        function addCardHTML(imageUrl, qNum, topic, isError, isBlank = false) {
+            const cardHTML = `
+                <div class="q-card glass-panel p-6 flex flex-col md:flex-row gap-6 relative">
+                    ${imageUrl ? `<div class="w-full md:w-1/4 flex flex-col items-center justify-center bg-gray-50 rounded-xl border border-gray-200 p-2 relative overflow-hidden group">
+                        <span class="absolute top-2 left-2 bg-indigo-600 text-white text-[10px] font-black px-2 py-1 rounded uppercase tracking-wider z-10 shadow-sm">Img ${qNum}</span>
+                        <img src="${imageUrl}" class="w-full max-h-40 object-cover rounded-lg group-hover:scale-105 transition duration-300">
+                    </div>` : '<div class="w-full md:w-1/4 flex items-center justify-center bg-gray-50 rounded-xl border border-gray-200 text-gray-400 font-semibold text-sm">Manual Entry</div>'}
+                    
+                    <div class="w-full ${imageUrl ? 'md:w-3/4' : 'md:w-3/4'} space-y-4">
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Topic</label>
+                            <input type="text" class="card-topic input-field" value="${topic}" placeholder="e.g. Calculus">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Extracted Question</label>
+                            <textarea class="card-question input-field text-sm" rows="1" placeholder="Type the question here...">${isBlank ? '' : 'Solve for X based on the handwritten equation.'}</textarea>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Correct Ans</label>
+                                <input type="text" class="card-correct input-field" value="${isBlank ? '' : '42'}">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Student Ans</label>
+                                <input type="text" class="card-student input-field" value="${isBlank ? '' : (isError ? '24' : '42')}">
+                            </div>
+                        </div>
+
+                        <div class="bg-gray-50 border border-gray-200 p-4 rounded-xl relative">
+                            <label class="block text-[11px] font-black text-gray-700 uppercase tracking-widest mb-3">Diagnostic Details <i class="fas fa-hand-pointer text-yellow-500"></i></label>
+                            
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-3">
+                                <select class="card-mistake input-field bg-white font-bold ${isError ? 'text-red-600 border-red-300' : 'text-green-600 border-green-300'}" onchange="this.className = this.value === 'None' ? 'card-mistake input-field bg-white font-bold text-green-600 border-green-300' : 'card-mistake input-field bg-white font-bold text-red-600 border-red-300'">
+                                    <option value="None" ${!isError ? 'selected' : ''}>No Mistake (Correct)</option>
+                                    <option value="Conceptual" ${isError ? 'selected' : ''}>Conceptual Error</option>
+                                    <option value="Careless">Careless Mistake</option>
+                                    <option value="Practice">Lack of Practice</option>
+                                    <option value="Time">Time Issue</option>
+                                </select>
+                                
+                                <div class="flex items-center gap-2 bg-white px-3 py-2 border rounded-lg">
+                                    <input type="checkbox" class="card-guessed w-4 h-4 accent-indigo-600 cursor-pointer">
+                                    <label class="text-sm font-semibold text-gray-700 cursor-pointer">Answer guessed?</label>
+                                </div>
+                            </div>
+                            
+                            <textarea class="card-steps input-field bg-white text-sm" rows="1" placeholder="Enter solution steps or specific feedback here...">${isBlank ? '' : (isError ? 'Applied formula incorrectly.' : 'Perfect logic.')}</textarea>
+                        </div>
+                    </div>
+                    <button type="button" onclick="this.closest('.q-card').remove()" class="absolute top-4 right-4 text-gray-300 hover:text-red-500 transition"><i class="fas fa-times"></i></button>
+                </div>
+            `;
+            cardsContainer.insertAdjacentHTML('beforeend', cardHTML);
+        }
+
+        // Save Data to Dashboard
+        verificationPhase.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const subject = document.getElementById('globalSubject').value || "General Assessment";
+            const cards = document.querySelectorAll('.q-card');
+            
+            if(cards.length === 0) return alert("Add at least one question.");
+
+            let questions = [];
+            let correctCount = 0;
+
+            cards.forEach((card, index) => {
+                const mistakeType = card.querySelector('.card-mistake').value;
+                const isCorrect = mistakeType === 'None';
+                if(isCorrect) correctCount++;
+
+                questions.push({
+                    qNum: index + 1,
+                    topic: card.querySelector('.card-topic').value || "General",
+                    questionText: card.querySelector('.card-question').value,
+                    correctAns: card.querySelector('.card-correct').value,
+                    studentAns: card.querySelector('.card-student').value,
+                    mistakeType: mistakeType,
+                    guessed: card.querySelector('.card-guessed').checked,
+                    steps: card.querySelector('.card-steps').value,
+                    isCorrect: isCorrect
+                });
             });
 
-            const score = Math.round((correctQ / totalQ) * 100);
-
+            // Package into a single "Test" object
             const newTest = {
-                topic: document.getElementById('displaySubject').innerText,
-                score: score,
-                time: Number(document.getElementById('totalTime').value),
-                concept: errors["Concept"],
-                careless: errors["Careless"],
-                formula: errors["Formula"],
-                stress: Math.floor(Math.random() * 5) + 3, // Simulate stress
-                // AI simulates 8 thinking types behind the scenes
-                thinking: { critical: 70, creative: 60, analytical: 80, practical: 50, reflective: 60, convergent: 75, divergent: 55, logical: 85 },
-                date: new Date().toISOString()
+                id: Date.now(),
+                subject: subject,
+                score: Math.round((correctCount / questions.length) * 100),
+                date: new Date().toISOString(),
+                questions: questions
             };
 
-            let history = JSON.parse(localStorage.getItem('eduMetricsHistory')) || [];
+            let history = JSON.parse(localStorage.getItem('eduMetricsV3')) || [];
             history.push(newTest);
-            localStorage.setItem('eduMetricsHistory', JSON.stringify(history));
+            localStorage.setItem('eduMetricsV3', JSON.stringify(history));
             
             window.location.href = "index.html"; 
-        }
+        });
     </script>
 </body>
 </html>
