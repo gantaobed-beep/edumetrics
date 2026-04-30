@@ -34,7 +34,7 @@
             <a href="teacher.html" class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-gray-500 transition"><i class="fas fa-camera w-5 text-center"></i> AI Scanner</a>
             <a href="premium.html" class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-gray-500 transition"><i class="fas fa-compass w-5 text-center text-amber-400"></i> Career Guidance</a>
         </nav>
-        <button onclick="clearData()" class="m-4 text-xs font-bold text-red-500 p-3 rounded-xl border border-red-100 hover:bg-red-50 transition"><i class="fas fa-trash"></i> Reset System Data</button>
+        <button onclick="forceClearData()" class="m-4 text-xs font-bold text-red-500 p-3 rounded-xl border border-red-100 hover:bg-red-50 transition"><i class="fas fa-trash"></i> Reset System Data</button>
     </aside>
 
     <main class="flex-1 overflow-y-auto p-8 lg:p-10 relative">
@@ -46,6 +46,13 @@
                     <p class="text-gray-500 mt-1 font-medium">Holistic analysis based on complete test history.</p>
                 </div>
             </header>
+
+            <!-- Error Catcher Box (Hidden by default) -->
+            <div id="errorBox" class="hidden bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-xl mb-8 shadow-sm">
+                <h3 class="font-bold text-lg mb-1"><i class="fas fa-exclamation-triangle"></i> System Crash Detected</h3>
+                <p id="errorText" class="text-sm mb-3">Something went wrong.</p>
+                <button onclick="forceClearData()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded shadow">Click Here to Factory Reset Data</button>
+            </div>
 
             <!-- TABS NAVIGATION -->
             <div class="flex gap-8 border-b border-gray-200 mb-8" id="tabsArea">
@@ -91,7 +98,7 @@
 
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         <div class="glass-card p-6 lg:col-span-2">
-                            <h3 class="font-bold text-gray-800 text-lg mb-4">Long-Term Progress (Accuracy & Consistency)</h3>
+                            <h3 class="font-bold text-gray-800 text-lg mb-4">Long-Term Progress (Accuracy)</h3>
                             <div class="relative h-72"><canvas id="historyChart"></canvas></div>
                         </div>
                         
@@ -146,9 +153,7 @@
         </div>
     </main>
 
-    <!-- ========================================= -->
-    <!-- CUSTOM QUIZ MODAL                         -->
-    <!-- ========================================= -->
+    <!-- CUSTOM QUIZ MODAL -->
     <div id="quizModal" class="hidden fixed inset-0 bg-gray-900/80 z-50 flex items-center justify-center backdrop-blur-sm transition-opacity">
         <div class="bg-white rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl transform transition-transform duration-300 m-4">
             <div class="bg-indigo-600 p-6 text-white flex justify-between items-center">
@@ -180,7 +185,14 @@
         </div>
     </div>
 
+    <!-- Application Script -->
     <script>
+        // Global Error Handler to catch hidden crashes
+        window.addEventListener('error', function(e) {
+            document.getElementById('errorBox').classList.remove('hidden');
+            document.getElementById('errorText').innerText = `Error: ${e.message} at line ${e.lineno}. Corrupted data is likely preventing the dashboard from loading.`;
+        });
+
         // --- UI Interactions ---
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
@@ -189,8 +201,11 @@
             document.getElementById('btn-' + tabId.split('-')[1]).classList.add('active');
         }
 
-        function clearData() {
-            if(confirm("Permanently delete all scanned data?")) { localStorage.removeItem('eduMetricsV3'); location.reload(); }
+        function forceClearData() {
+            if(confirm("Permanently delete all scanned data? This will fix corrupted storage.")) { 
+                localStorage.clear(); 
+                location.reload(); 
+            }
         }
 
         function openQuizModal() { document.getElementById('quizModal').classList.remove('hidden'); }
@@ -200,11 +215,21 @@
             btn.classList.add('border-indigo-500', 'bg-indigo-50');
         }
 
-        // --- Core Data Logic ---
-        let historyData = JSON.parse(localStorage.getItem('eduMetricsV3')) || [];
-        Chart.defaults.font.family = "'Inter', sans-serif";
+        // --- Core Data Initialization ---
+        let historyData = [];
+        try {
+            historyData = JSON.parse(localStorage.getItem('eduMetricsV3')) || [];
+        } catch(e) {
+            console.error("Data was corrupted, resetting.");
+            historyData = [];
+        }
 
-        if(historyData.length === 0) {
+        // Ensure Chart JS is ready
+        if (typeof Chart !== 'undefined') {
+            Chart.defaults.font.family = "'Inter', sans-serif";
+        }
+
+        if(!historyData || historyData.length === 0) {
             document.getElementById('emptyState').classList.remove('hidden');
         } else {
             document.getElementById('dataContainer').classList.remove('hidden');
@@ -215,58 +240,65 @@
             let progressHistory = [];
             let labels = [];
 
-            // Aggregate Data
+            // Aggregate Data Safely
             historyData.forEach((test, tIndex) => {
                 labels.push(`Test ${tIndex + 1}`);
-                progressHistory.push(test.score);
+                progressHistory.push(test.score || 0);
 
-                test.questions.forEach(q => {
-                    totalQ++;
-                    if(q.isCorrect) correctQ++;
-                    else {
-                        if(mistakes[q.mistakeType] !== undefined) mistakes[q.mistakeType]++;
-                        topics[q.topic] = (topics[q.topic] || 0) + 1;
-                    }
-                });
+                if (test.questions && Array.isArray(test.questions)) {
+                    test.questions.forEach(q => {
+                        totalQ++;
+                        if(q.isCorrect) {
+                            correctQ++;
+                        } else {
+                            if(q.mistakeType && mistakes[q.mistakeType] !== undefined) {
+                                mistakes[q.mistakeType]++;
+                            }
+                            if(q.topic) {
+                                topics[q.topic] = (topics[q.topic] || 0) + 1;
+                            }
+                        }
+                    });
+                }
             });
 
             // 1. Overview KPIs
-            let overallAccuracy = Math.round((correctQ / totalQ) * 100) || 0;
-            document.getElementById('avgScore').innerText = overallAccuracy + '%';
+            let overallAccuracy = totalQ > 0 ? Math.round((correctQ / totalQ) * 100) : 0;
+            document.getElementById('avgScore').innerText = `${overallAccuracy}%`;
             document.getElementById('totQ').innerText = totalQ;
 
-            // 2. STRESS INDICATOR LOGIC (BUG FIXED)
-            // Stress is calculated by the frequency of Careless & Time mistakes
+            // 2. STRESS INDICATOR LOGIC
             let stressScore = (mistakes.Careless * 1.5 + mistakes.Time) / (totalQ || 1);
             let sCard = document.getElementById('stressCardBorder');
             let sLevel = document.getElementById('stressLevel');
             let sText = document.getElementById('stressText');
             let sIcon = document.getElementById('stressIcon');
 
+            // Using backticks to prevent quotation collisions
             if (stressScore > 0.3) {
                 sCard.classList.add('border-rose-500'); sLevel.innerText = "Severe"; sLevel.classList.add('text-rose-600');
                 sIcon.classList.add('text-rose-400', 'animate-pulse');
-                sText.innerHTML = 'High frequency of careless/time errors. <strong class="text-rose-600">Student may be burnt out or stressed.</strong>';
+                sText.innerHTML = `High frequency of careless/time errors. <strong class="text-rose-600">Student may be burnt out or stressed.</strong>`;
             } else if (stressScore > 0.15) {
                 sCard.classList.add('border-amber-500'); sLevel.innerText = "Light"; sLevel.classList.add('text-amber-500');
                 sIcon.classList.add('text-amber-400');
-                sText.innerHTML = 'Noticeable careless mistakes. <strong class="text-amber-600">Slight anxiety or rushing detected.</strong>';
+                sText.innerHTML = `Noticeable careless mistakes. <strong class="text-amber-600">Slight anxiety or rushing detected.</strong>`;
             } else {
                 sCard.classList.add('border-emerald-500'); sLevel.innerText = "Low"; sLevel.classList.add('text-emerald-500');
                 sIcon.classList.add('text-emerald-400');
-                sText.innerHTML = 'Healthy learning state. Mistakes are primarily conceptual, not stress-induced.';
+                sText.innerHTML = `Healthy learning state. Mistakes are primarily conceptual, not stress-induced.`;
             }
 
-            // 3. COGNITIVE ENGINE (Simulating 8 Types of Thinking based on Error Typology)
+            // 3. COGNITIVE ENGINE
             let cogScores = {
                 Analytical: Math.max(10, overallAccuracy - (mistakes.Conceptual * 2)),
                 Logical: Math.max(10, overallAccuracy - (mistakes.Conceptual * 1.5)),
                 Reflective: Math.max(10, overallAccuracy - (mistakes.Careless * 3)),
                 Practical: Math.max(10, overallAccuracy - (mistakes.Practice * 2)),
                 Convergent: Math.max(10, overallAccuracy - (mistakes.Time * 2)),
-                Critical: Math.max(10, overallAccuracy - 5), // Baseline shift
-                Creative: Math.max(10, overallAccuracy + 5), // Baseline shift
-                Divergent: Math.max(10, overallAccuracy)     // Baseline
+                Critical: Math.max(10, overallAccuracy - 5), 
+                Creative: Math.max(10, overallAccuracy + 5), 
+                Divergent: Math.max(10, overallAccuracy)     
             };
 
             // 4. AUTO-PRACTICE GENERATOR LOGIC
@@ -283,65 +315,65 @@
                 if (mistakes.Careless > mistakes.Conceptual) {
                     feedbackList.innerHTML += `<li><i class="fas fa-exclamation-triangle text-amber-500 mr-2"></i> You grasp the concepts, but lose points to <strong class="text-rose-500">careless mistakes</strong>. This often indicates rushing or test anxiety.</li>`;
                 }
-                if (mistakes.Conceptual > mistakes.Careless) {
+                if (mistakes.Conceptual > mistakes.Careless || mistakes.Conceptual > 0) {
                     feedbackList.innerHTML += `<li><i class="fas fa-book-open text-blue-500 mr-2"></i> You are struggling with <strong class="text-blue-600">core concepts</strong>. Do not just practice; re-learn the foundational rules of ${weakTopic}.</li>`;
                 }
                 if (mistakes.Time > 0) {
                     feedbackList.innerHTML += `<li><i class="fas fa-clock text-purple-500 mr-2"></i> <strong class="text-purple-600">Time management</strong> is hurting your score. Implement timed drills for ${weakTopic}.</li>`;
                 }
             } else {
-                feedbackList.innerHTML = "<li><i class="fas fa-star text-yellow-500 mr-2"></i> Perfect accuracy across the board. Ready for advanced material.</li>";
+                feedbackList.innerHTML = `<li><i class="fas fa-star text-yellow-500 mr-2"></i> Perfect accuracy across the board. Ready for advanced material.</li>`;
             }
 
             // --- CHARTS INITIALIZATION ---
+            if (typeof Chart !== 'undefined') {
+                // Line Chart (Progress)
+                new Chart(document.getElementById('historyChart').getContext('2d'), { 
+                    type: 'line', 
+                    data: { labels: labels, datasets: [{ label: 'Score %', data: progressHistory, borderColor: '#4f46e5', tension: 0.4, fill: true, backgroundColor: 'rgba(79, 70, 229, 0.1)', borderWidth: 3 }] },
+                    options: { responsive: true, maintainAspectRatio: false, scales: { y: { min: 0, max: 100 } }, plugins: { legend: {display: false} } }
+                });
 
-            // 1. Line Chart (Progress)
-            new Chart(document.getElementById('historyChart').getContext('2d'), { 
-                type: 'line', 
-                data: { labels: labels, datasets: [{ label: 'Score %', data: progressHistory, borderColor: '#4f46e5', tension: 0.4, fill: true, backgroundColor: 'rgba(79, 70, 229, 0.1)', borderWidth: 3 }] },
-                options: { responsive: true, maintainAspectRatio: false, scales: { y: { min: 0, max: 100 } }, plugins: { legend: {display: false} } }
-            });
+                // Radar Chart
+                new Chart(document.getElementById('radarChart').getContext('2d'), {
+                    type: 'radar',
+                    data: {
+                        labels: ['Analytical', 'Logical', 'Reflective', 'Practical', 'Convergent', 'Critical', 'Creative', 'Divergent'],
+                        datasets: [{
+                            label: 'Cognitive Score',
+                            data: [cogScores.Analytical, cogScores.Logical, cogScores.Reflective, cogScores.Practical, cogScores.Convergent, cogScores.Critical, cogScores.Creative, cogScores.Divergent],
+                            backgroundColor: 'rgba(99, 102, 241, 0.3)', borderColor: '#4f46e5', pointBackgroundColor: '#4f46e5', borderWidth: 2
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, scales: { r: { min: 0, max: 100, ticks: {stepSize: 20} } }, plugins: { legend: { display: false } } }
+                });
 
-            // 2. Radar Chart (8-Point Cognitive Map)
-            new Chart(document.getElementById('radarChart').getContext('2d'), {
-                type: 'radar',
-                data: {
-                    labels: ['Analytical', 'Logical', 'Reflective', 'Practical', 'Convergent', 'Critical', 'Creative', 'Divergent'],
-                    datasets: [{
-                        label: 'Cognitive Score',
-                        data: [cogScores.Analytical, cogScores.Logical, cogScores.Reflective, cogScores.Practical, cogScores.Convergent, cogScores.Critical, cogScores.Creative, cogScores.Divergent],
-                        backgroundColor: 'rgba(99, 102, 241, 0.3)',
-                        borderColor: '#4f46e5',
-                        pointBackgroundColor: '#4f46e5',
-                        borderWidth: 2
-                    }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, scales: { r: { min: 0, max: 100, ticks: {stepSize: 20} } }, plugins: { legend: { display: false } } }
-            });
+                // Doughnut Chart
+                new Chart(document.getElementById('errorPieChart').getContext('2d'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Conceptual', 'Careless', 'Lack of Practice', 'Time Issue'],
+                        datasets: [{ data: [mistakes.Conceptual, mistakes.Careless, mistakes.Practice, mistakes.Time], backgroundColor: ['#ef4444', '#f59e0b', '#3b82f6', '#8b5cf6'], borderWidth: 0 }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'bottom' } } }
+                });
 
-            // 3. Doughnut Chart (Error Distribution)
-            new Chart(document.getElementById('errorPieChart').getContext('2d'), {
-                type: 'doughnut',
-                data: {
-                    labels: ['Conceptual', 'Careless', 'Lack of Practice', 'Time Issue'],
-                    datasets: [{ data: [mistakes.Conceptual, mistakes.Careless, mistakes.Practice, mistakes.Time], backgroundColor: ['#ef4444', '#f59e0b', '#3b82f6', '#8b5cf6'], borderWidth: 0 }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'bottom' } } }
-            });
+                // Bar Chart
+                let sortedTopics = Object.entries(topics).sort((a,b) => b[1] - a[1]);
+                let topicLabels = sortedTopics.map(t => t[0]);
+                let topicData = sortedTopics.map(t => t[1]);
 
-            // 4. Bar Chart (Topics)
-            let sortedTopics = Object.entries(topics).sort((a,b) => b[1] - a[1]);
-            let topicLabels = sortedTopics.map(t => t[0]);
-            let topicData = sortedTopics.map(t => t[1]);
-
-            new Chart(document.getElementById('topicBarChart').getContext('2d'), {
-                type: 'bar',
-                data: {
-                    labels: topicLabels,
-                    datasets: [{ label: 'Total Errors', data: topicData, backgroundColor: '#0ea5e9', borderRadius: 6 }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: {stepSize: 1} } }, plugins: { legend: { display: false } } }
-            });
+                if(topicLabels.length > 0) {
+                    new Chart(document.getElementById('topicBarChart').getContext('2d'), {
+                        type: 'bar',
+                        data: {
+                            labels: topicLabels,
+                            datasets: [{ label: 'Total Errors', data: topicData, backgroundColor: '#0ea5e9', borderRadius: 6 }]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: {stepSize: 1} } }, plugins: { legend: { display: false } } }
+                    });
+                }
+            }
         }
     </script>
 </body>
