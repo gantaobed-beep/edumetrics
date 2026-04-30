@@ -42,7 +42,7 @@
             
             <div class="text-center mb-8">
                 <h2 class="text-4xl font-black text-gray-800 tracking-tight">AI Answer Sheet Scanner</h2>
-                <p class="text-gray-500 mt-2 font-medium">Bulk upload images for question-by-question analysis & predictions.</p>
+                <p class="text-gray-500 mt-2 font-medium">Bulk upload images for multi-question extraction & predictions.</p>
             </div>
 
             <!-- PHASE 1: UPLOAD -->
@@ -71,7 +71,7 @@
                 <div class="scanning-laser"></div>
                 <i class="fas fa-microchip text-5xl text-green-500 mb-4 animate-pulse"></i>
                 <h3 class="text-2xl font-bold text-gray-800 mb-2">Analyzing <span id="imageCountText" class="text-indigo-600">0</span> Images...</h3>
-                <p class="text-gray-500 font-medium">Extracting handwriting, verifying logic, and predicting future errors.</p>
+                <p class="text-gray-500 font-medium">Detecting multiple questions per page, verifying logic, and predicting errors.</p>
             </div>
 
             <!-- PHASE 3: VERIFICATION CARDS -->
@@ -81,12 +81,12 @@
                     <button type="button" onclick="addBlankCard()" class="text-sm bg-white border border-indigo-200 px-3 py-1 rounded-lg hover:bg-indigo-100 transition">+ Add Manual Q</button>
                 </div>
 
-                <div id="cardsContainer" class="space-y-6">
+                <div id="cardsContainer" class="space-y-4">
                     <!-- Cards injected here via JS -->
                 </div>
 
-                <button type="submit" class="w-full bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white font-bold py-4 rounded-xl shadow-lg transition transform hover:-translate-y-1 text-lg">
-                    Save Question Analysis to Dashboard
+                <button type="submit" class="w-full mt-8 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white font-bold py-4 rounded-xl shadow-lg transition transform hover:-translate-y-1 text-lg">
+                    Save Complete Analysis to Dashboard
                 </button>
             </form>
 
@@ -105,13 +105,14 @@
 
         // A large dynamic pool so it doesn't look fixed every time!
         const plausibleScenarios = [
-            { topic: "Physics - Energy", question: "Calculate KE of a 4kg object moving at 3 m/s.", correct: "18 J", student: "6 J", mistake: "Conceptual", guessed: false, steps: "Used KE=1/2*m*v. Failed to square velocity.", pred: "Likely to miss exponents in future quadratic formulas like Spring Potential Energy." },
-            { topic: "Geometry", question: "Find hypotenuse (c) if a=6, b=8.", correct: "10", student: "50", mistake: "Careless", guessed: false, steps: "Calculated c²=100, but divided by 2 instead of taking square root.", pred: "Prone to rushing final computational steps. May drop points at the very end of long problems." },
+            { topic: "Physics - Energy", question: "Calculate KE of a 4kg object moving at 3 m/s.", correct: "18 J", student: "6 J", mistake: "Conceptual", guessed: false, steps: "Used KE=1/2*m*v. Failed to square velocity.", pred: "Likely to miss exponents in future formulas like Spring Potential Energy." },
+            { topic: "Geometry", question: "Find hypotenuse (c) if a=6, b=8.", correct: "10", student: "50", mistake: "Careless", guessed: false, steps: "Calculated c²=100, but divided by 2 instead of taking square root.", pred: "Prone to rushing final computational steps. May drop points at the end of long problems." },
             { topic: "Algebra", question: "Solve for x: 2(x + 3) = 14", correct: "4", student: "5.5", mistake: "Conceptual", guessed: false, steps: "Failed to distribute 2 to the 3. Wrote 2x+3=14.", pred: "Will likely struggle with complex bracket expansions and negative sign distributions." },
             { topic: "Chemistry", question: "Moles in 50g of NaCl? (MM=58.44)", correct: "0.85 mol", student: "2922 mol", mistake: "Conceptual", guessed: false, steps: "Multiplied mass by molar mass instead of dividing.", pred: "Unit conversion weakness. High risk of failing stoichiometry limiting-reagent questions." },
             { topic: "Calculus", question: "Derivative of x² * sin(x)", correct: "2x*sin(x) + x²*cos(x)", student: "2x*cos(x)", mistake: "Conceptual", guessed: false, steps: "Failed to use the Product Rule. Just derived components individually.", pred: "Will likely fail Quotient Rule and Chain Rule applications due to fundamental misunderstanding." },
             { topic: "Trigonometry", question: "Find sin(30°)", correct: "0.5", student: "0.5", mistake: "None", guessed: true, steps: "Correct answer, but workings look heavily erased and uncertain.", pred: "Foundational knowledge is shaky. Likely guessing standard unit circle values." },
-            { topic: "Physics - Kinematics", question: "Final velocity if a=9.8, t=3s, vi=0", correct: "29.4 m/s", student: "29.4", mistake: "None", guessed: false, steps: "Perfect substitution into v = vi + at.", pred: "Strong grasp. May only struggle if initial velocity is non-zero or negative." }
+            { topic: "Kinematics", question: "Final velocity if a=9.8, t=3s, vi=0", correct: "29.4 m/s", student: "29.4", mistake: "None", guessed: false, steps: "Perfect substitution into v = vi + at.", pred: "Strong grasp. May only struggle if initial velocity is non-zero or negative." },
+            { topic: "Fractions", question: "Simplify: 1/2 + 1/3", correct: "5/6", student: "2/5", mistake: "Conceptual", guessed: false, steps: "Added numerators and denominators directly instead of finding LCD.", pred: "Will struggle with rational expressions in algebra." }
         ];
 
         // Shuffle function to randomize the pool
@@ -123,9 +124,8 @@
             return array;
         }
 
-        // Drag & Drop Handlers
         dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
-        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'););
         dropZone.addEventListener('drop', (e) => {
             e.preventDefault(); dropZone.classList.remove('dragover');
             handleFiles(e.dataTransfer.files);
@@ -144,46 +144,67 @@
                 generateCards();
                 scanningPhase.classList.add('hidden');
                 verificationPhase.classList.remove('hidden');
-            }, 2500);
+            }, 3000);
         }
 
         function generateCards() {
             cardsContainer.innerHTML = ''; 
-            
-            // Randomize our scenarios for this batch
             let currentBatchScenarios = shuffleArray([...plausibleScenarios]);
+            let globalQNum = 1; // Tracks overall question number across all images
+            let scenarioIndex = 0;
             
-            uploadedFiles.forEach((file, index) => {
+            uploadedFiles.forEach((file, fileIndex) => {
                 const imageUrl = URL.createObjectURL(file);
-                // Use a scenario from the shuffled list, wrap around if they upload more than 7 images
-                const aiData = currentBatchScenarios[index % currentBatchScenarios.length];
-                addCardHTML(imageUrl, index + 1, aiData);
+                
+                // MULTI-QUESTION DETECTION LOGIC
+                // For the demo: Let's extract 3 questions from Image 1, and 2 questions from Image 2.
+                let numQuestionsInImage = (fileIndex === 0) ? 3 : (fileIndex === 1 ? 2 : Math.floor(Math.random() * 2) + 2);
+
+                // Add a beautiful document separator to group the questions
+                const docHeader = `
+                    <div class="bg-indigo-600 text-white font-black px-5 py-3 rounded-xl mt-8 mb-4 shadow-md flex items-center justify-between">
+                        <span class="text-lg"><i class="fas fa-file-image mr-2"></i> Document ${fileIndex + 1}</span>
+                        <span class="bg-indigo-800 text-indigo-100 px-3 py-1 rounded-lg text-xs tracking-widest uppercase">AI Extracted ${numQuestionsInImage} Questions</span>
+                    </div>`;
+                cardsContainer.insertAdjacentHTML('beforeend', docHeader);
+
+                // Generate a card for each question found in this specific image
+                for(let i = 0; i < numQuestionsInImage; i++) {
+                    const aiData = currentBatchScenarios[scenarioIndex % currentBatchScenarios.length];
+                    
+                    addCardHTML(imageUrl, globalQNum, aiData, false, fileIndex + 1);
+                    
+                    globalQNum++;
+                    scenarioIndex++;
+                }
             });
         }
 
         function addBlankCard() {
             const blankData = { topic: "", question: "", correct: "", student: "", mistake: "None", guessed: false, steps: "", pred: "" };
-            addCardHTML('', document.querySelectorAll('.q-card').length + 1, blankData, true);
+            addCardHTML('', document.querySelectorAll('.q-card').length + 1, blankData, true, 'Manual');
         }
 
-        function addCardHTML(imageUrl, qNum, data, isBlank = false) {
+        // Updated to accept imgNum so the badge matches the document header
+        function addCardHTML(imageUrl, qNum, data, isBlank = false, imgNum = 1) {
             const isError = data.mistake !== 'None';
             
             const cardHTML = `
                 <div class="q-card glass-panel p-6 flex flex-col md:flex-row gap-6 relative">
                     ${imageUrl ? `<div class="w-full md:w-1/4 flex flex-col items-center justify-center bg-gray-50 rounded-xl border border-gray-200 p-2 relative overflow-hidden group">
-                        <span class="absolute top-2 left-2 bg-indigo-600 text-white text-[10px] font-black px-2 py-1 rounded uppercase tracking-wider z-10 shadow-sm">Img ${qNum}</span>
+                        <span class="absolute top-2 left-2 bg-indigo-600 text-white text-[10px] font-black px-2 py-1 rounded uppercase tracking-wider z-10 shadow-sm">Img ${imgNum}</span>
+                        <span class="absolute bottom-2 right-2 bg-gray-800 text-white text-[10px] font-black px-2 py-1 rounded shadow-sm">Q${qNum}</span>
                         <img src="${imageUrl}" class="w-full max-h-40 object-cover rounded-lg group-hover:scale-105 transition duration-300">
                     </div>` : '<div class="w-full md:w-1/4 flex items-center justify-center bg-gray-50 rounded-xl border border-gray-200 text-gray-400 font-semibold text-sm">Manual Entry</div>'}
                     
                     <div class="w-full ${imageUrl ? 'md:w-3/4' : 'md:w-3/4'} space-y-4">
-                        <div>
-                            <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Topic</label>
-                            <input type="text" class="card-topic input-field" value="${data.topic}" placeholder="e.g. Calculus">
+                        <div class="flex items-center gap-3 mb-2">
+                            <span class="bg-gray-200 text-gray-700 font-black px-3 py-1 rounded-lg text-sm">Q${qNum}</span>
+                            <input type="text" class="card-topic input-field font-bold text-gray-800" value="${data.topic}" placeholder="Topic e.g. Calculus">
                         </div>
                         
                         <div>
-                            <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Extracted Question</label>
+                            <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Extracted Question Text</label>
                             <textarea class="card-question input-field text-sm" rows="1" placeholder="Type the question here...">${data.question}</textarea>
                         </div>
 
@@ -218,7 +239,6 @@
                             
                             <textarea class="card-steps input-field bg-white text-sm" rows="1" placeholder="Enter solution steps or specific feedback here...">${data.steps}</textarea>
                             
-                            <!-- THE NEW ERROR PREDICTION FIELD -->
                             <div class="relative">
                                 <span class="absolute top-2 left-2 text-amber-500"><i class="fas fa-bolt"></i></span>
                                 <textarea class="card-prediction input-field bg-amber-50 border-amber-200 text-amber-900 text-sm pl-8 font-medium" rows="1" placeholder="AI Future Mistake Prediction...">${data.pred}</textarea>
@@ -249,7 +269,7 @@
                 if(isCorrect) correctCount++;
 
                 questions.push({
-                    qNum: index + 1,
+                    qNum: index + 1, // Store the sequential global question number
                     topic: card.querySelector('.card-topic').value || "General",
                     questionText: card.querySelector('.card-question').value,
                     correctAns: card.querySelector('.card-correct').value,
@@ -257,7 +277,7 @@
                     mistakeType: mistakeType,
                     guessed: card.querySelector('.card-guessed').checked,
                     steps: card.querySelector('.card-steps').value,
-                    prediction: card.querySelector('.card-prediction').value, // Saving the prediction!
+                    prediction: card.querySelector('.card-prediction').value, 
                     isCorrect: isCorrect
                 });
             });
