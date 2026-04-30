@@ -103,42 +103,34 @@
         
         let uploadedFiles = [];
 
-        // A large dynamic pool so it doesn't look fixed every time!
-        const plausibleScenarios = [
-            { topic: "Physics - Energy", question: "Calculate KE of a 4kg object moving at 3 m/s.", correct: "18 J", student: "6 J", mistake: "Conceptual", guessed: false, steps: "Used KE=1/2*m*v. Failed to square velocity.", pred: "Likely to miss exponents in future formulas like Spring Potential Energy." },
-            { topic: "Geometry", question: "Find hypotenuse (c) if a=6, b=8.", correct: "10", student: "50", mistake: "Careless", guessed: false, steps: "Calculated c²=100, but divided by 2 instead of taking square root.", pred: "Prone to rushing final computational steps. May drop points at the end of long problems." },
-            { topic: "Algebra", question: "Solve for x: 2(x + 3) = 14", correct: "4", student: "5.5", mistake: "Conceptual", guessed: false, steps: "Failed to distribute 2 to the 3. Wrote 2x+3=14.", pred: "Will likely struggle with complex bracket expansions and negative sign distributions." },
-            { topic: "Chemistry", question: "Moles in 50g of NaCl? (MM=58.44)", correct: "0.85 mol", student: "2922 mol", mistake: "Conceptual", guessed: false, steps: "Multiplied mass by molar mass instead of dividing.", pred: "Unit conversion weakness. High risk of failing stoichiometry limiting-reagent questions." },
-            { topic: "Calculus", question: "Derivative of x² * sin(x)", correct: "2x*sin(x) + x²*cos(x)", student: "2x*cos(x)", mistake: "Conceptual", guessed: false, steps: "Failed to use the Product Rule. Just derived components individually.", pred: "Will likely fail Quotient Rule and Chain Rule applications due to fundamental misunderstanding." },
-            { topic: "Trigonometry", question: "Find sin(30°)", correct: "0.5", student: "0.5", mistake: "None", guessed: true, steps: "Correct answer, but workings look heavily erased and uncertain.", pred: "Foundational knowledge is shaky. Likely guessing standard unit circle values." },
-            { topic: "Kinematics", question: "Final velocity if a=9.8, t=3s, vi=0", correct: "29.4 m/s", student: "29.4", mistake: "None", guessed: false, steps: "Perfect substitution into v = vi + at.", pred: "Strong grasp. May only struggle if initial velocity is non-zero or negative." },
-            { topic: "Fractions", question: "Simplify: 1/2 + 1/3", correct: "5/6", student: "2/5", mistake: "Conceptual", guessed: false, steps: "Added numerators and denominators directly instead of finding LCD.", pred: "Will struggle with rational expressions in algebra." }
+        // Exact Hardcoded Data matching your specific images for the presentation!
+        const presentationData = [
+            // Data for the FIRST image you upload (The 50m falling ball)
+            { topic: "Physics - Kinematics", question: "A ball is dropped from a 50m building. How long to hit the ground? (g = 9.8)", correct: "3.19 seconds", student: "3.19 seconds", mistake: "Careless", guessed: false, steps: "Initial careless algebra error, but made an excellent recovery. (+9/10)", pred: "Prone to minor arithmetic errors in intermediate steps." },
+            { topic: "Physics - Kinematics", question: "Calculate final velocity before impact.", correct: "31.26 m/s downwards", student: "31.26 m/s downwards", mistake: "None", guessed: false, steps: "Perfect logical deduction! (+10/10)", pred: "Strong grasp of kinematic formulas." },
+            
+            // Data for the SECOND image you upload (Kinetic Energy)
+            { topic: "Physics - Energy", question: "Calculate the Kinetic Energy of a 4kg object moving at 3 m/s.", correct: "18 Joules", student: "6 Joules", mistake: "Conceptual", guessed: false, steps: "Used KE = 1/2*m*v instead of KE = 1/2*m*v². Failed to square the velocity.", pred: "Likely to miss exponents in future formulas like Spring Potential Energy." },
+            
+            // Data for the THIRD image (Geometry)
+            { topic: "Geometry", question: "Find the hypotenuse (c) of a right triangle where side a = 6 and side b = 8.", correct: "10", student: "50", mistake: "Careless", guessed: false, steps: "Correctly calculated c² = 100, but divided by 2 instead of taking the square root.", pred: "Prone to rushing final computational steps." }
         ];
 
-        // Shuffle function to randomize the pool
-        function shuffleArray(array) {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
-            }
-            return array;
-        }
-
-        // --- THE FIXED DRAG AND DROP LOGIC (Syntax Error Removed) ---
+        // Drag & Drop Handlers
         dropZone.addEventListener('dragover', (e) => { 
             e.preventDefault(); 
             dropZone.classList.add('dragover'); 
         });
         
         dropZone.addEventListener('dragleave', (e) => { 
-            e.preventDefault();
+            e.preventDefault(); 
             dropZone.classList.remove('dragover'); 
         });
         
-        dropZone.addEventListener('drop', (e) => {
+        dropZone.addEventListener('drop', (e) => { 
             e.preventDefault(); 
-            dropZone.classList.remove('dragover');
-            handleFiles(e.dataTransfer.files);
+            dropZone.classList.remove('dragover'); 
+            handleFiles(e.dataTransfer.files); 
         });
         
         fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
@@ -160,15 +152,14 @@
 
         function generateCards() {
             cardsContainer.innerHTML = ''; 
-            let currentBatchScenarios = shuffleArray([...plausibleScenarios]);
-            let globalQNum = 1; // Tracks overall question number across all images
-            let scenarioIndex = 0;
+            let globalQNum = 1; 
+            let dataIndex = 0; // We pull strictly in order now, no randomizing!
             
             uploadedFiles.forEach((file, fileIndex) => {
                 const imageUrl = URL.createObjectURL(file);
                 
-                // MULTI-QUESTION DETECTION LOGIC
-                let numQuestionsInImage = (fileIndex === 0) ? 3 : (fileIndex === 1 ? 2 : Math.floor(Math.random() * 2) + 2);
+                // If it's the first image, extract 2 questions. Otherwise extract 1.
+                let numQuestionsInImage = (fileIndex === 0) ? 2 : 1;
 
                 const docHeader = `
                     <div class="bg-indigo-600 text-white font-black px-5 py-3 rounded-xl mt-8 mb-4 shadow-md flex items-center justify-between">
@@ -178,10 +169,13 @@
                 cardsContainer.insertAdjacentHTML('beforeend', docHeader);
 
                 for(let i = 0; i < numQuestionsInImage; i++) {
-                    const aiData = currentBatchScenarios[scenarioIndex % currentBatchScenarios.length];
+                    // Fallback to a default if you upload too many images
+                    const aiData = presentationData[dataIndex] || { topic: "General Math", question: "Solve the equation.", correct: "100", student: "85", mistake: "Practice", guessed: true, steps: "Needs review.", pred: "Needs practice." };
+                    
                     addCardHTML(imageUrl, globalQNum, aiData, false, fileIndex + 1);
+                    
                     globalQNum++;
-                    scenarioIndex++;
+                    dataIndex++;
                 }
             });
         }
@@ -210,7 +204,7 @@
                         
                         <div>
                             <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Extracted Question Text</label>
-                            <textarea class="card-question input-field text-sm" rows="1" placeholder="Type the question here...">${data.question}</textarea>
+                            <textarea class="card-question input-field text-sm" rows="1">${data.question}</textarea>
                         </div>
 
                         <div class="grid grid-cols-2 gap-4">
@@ -242,11 +236,11 @@
                                 </div>
                             </div>
                             
-                            <textarea class="card-steps input-field bg-white text-sm" rows="1" placeholder="Enter solution steps or specific feedback here...">${data.steps}</textarea>
+                            <textarea class="card-steps input-field bg-white text-sm" rows="1">${data.steps}</textarea>
                             
                             <div class="relative">
                                 <span class="absolute top-2 left-2 text-amber-500"><i class="fas fa-bolt"></i></span>
-                                <textarea class="card-prediction input-field bg-amber-50 border-amber-200 text-amber-900 text-sm pl-8 font-medium" rows="1" placeholder="AI Future Mistake Prediction...">${data.pred}</textarea>
+                                <textarea class="card-prediction input-field bg-amber-50 border-amber-200 text-amber-900 text-sm pl-8 font-medium" rows="1">${data.pred}</textarea>
                             </div>
                         </div>
                     </div>
@@ -256,7 +250,6 @@
             cardsContainer.insertAdjacentHTML('beforeend', cardHTML);
         }
 
-        // Save Data to Dashboard
         verificationPhase.addEventListener('submit', function(e) {
             e.preventDefault();
             
