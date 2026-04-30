@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard - EduMetrics</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* Base Styling & Custom Fonts */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
+        
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #f0fdf4; /* Very light green background */
+            color: #1f2937;
+        }
+
+        /* Glassmorphism Effect for Cards */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .glass-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+        }
+
+        /* Sidebar Styling */
+        aside {
+            background: linear-gradient(180deg, #ffffff 0%, #f9fafb 100%);
+        }
+
+        .nav-item {
+            transition: all 0.2s ease-in-out;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-item::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0;
+            width: 4px; height: 100%;
+            background-color: transparent;
+            transition: background-color 0.2s;
+        }
+
+        .nav-item.active {
+            background-color: #eef2ff;
+            color: #4f46e5;
+        }
+        
+        .nav-item.active::before {
+            background-color: #4f46e5;
+        }
+
+        .nav-item:not(.active):hover {
+            background-color: #f3f4f6;
+            color: #111827;
+        }
+
+        /* Chart Containers */
+        .chart-container {
+            position: relative;
+            height: 280px;
+            width: 100%;
+        }
+
+        /* Header Gradient Text */
+        .gradient-text {
+            background: linear-gradient(90deg, #10b981, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden">
+
+    <!-- Sidebar -->
+    <aside class="w-64 border-r border-gray-200 flex flex-col shadow-sm z-10 relative">
+        <div class="p-6 border-b border-gray-100 flex items-center justify-center">
+            <div class="w-10 h-10 bg-gradient-to-br from-green-400 to-blue-500 rounded-lg flex items-center justify-center mr-3 shadow-md text-white font-bold text-xl">E</div>
+            <h1 class="text-2xl font-black tracking-tight text-gray-800">Edu<span class="text-green-500">Metrics</span></h1>
+        </div>
+        
+        <nav class="flex-1 mt-6 space-y-2 px-4">
+            <a href="index.html" class="nav-item active flex items-center gap-3 px-4 py-3 rounded-xl font-bold">
+                <i class="fas fa-chart-pie w-5 text-center text-indigo-500"></i> Dashboard
+            </a>
+            <a href="teacher.html" class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-gray-500">
+                <i class="fas fa-upload w-5 text-center"></i> Upload Data
+            </a>
+            <a href="premium.html" class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-gray-500 group">
+                <i class="fas fa-crown w-5 text-center text-amber-400 group-hover:text-amber-500 transition-colors"></i> Career AI
+            </a>
+        </nav>
+        
+        <div class="p-6 mt-auto">
+            <button onclick="clearData()" class="w-full text-xs font-semibold text-red-500 bg-red-50 hover:bg-red-100 py-3 rounded-xl transition duration-300 flex items-center justify-center gap-2 border border-red-100">
+                <i class="fas fa-eraser"></i> Clear Data
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 overflow-y-auto p-8 lg:p-12">
+        <div class="max-w-7xl mx-auto">
+            
+            <header class="mb-10 flex flex-col md:flex-row md:items-end justify-between">
+                <div>
+                    <p class="text-sm font-bold text-green-500 uppercase tracking-widest mb-1">Overview</p>
+                    <h2 class="text-4xl font-black tracking-tight"><span class="gradient-text">Performance</span> Analytics</h2>
+                    <p class="text-gray-500 mt-2">Real-time cognitive and academic tracking.</p>
+                </div>
+                
+                <!-- Status Badge -->
+                <div class="mt-4 md:mt-0 flex items-center bg-white px-4 py-2 rounded-full shadow-sm border border-gray-100">
+                    <span class="w-2 h-2 rounded-full bg-green-500 mr-2 animate-pulse"></span>
+                    <span class="text-xs font-bold text-gray-600">Local Storage Active</span>
+                </div>
+            </header>
+
+            <!-- KPI Summary Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+                
+                <!-- Score Card -->
+                <div class="glass-card p-6 border-l-4 border-l-blue-500 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-blue-100 rounded-full opacity-50 blur-xl"></div>
+                    <div class="relative z-10">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider">Average Score</h3>
+                            <div class="p-2 bg-blue-50 rounded-lg"><i class="fas fa-bullseye text-blue-500"></i></div>
+                        </div>
+                        <h2 id="avgScore" class="text-4xl font-black text-gray-800">--%</h2>
+                    </div>
+                </div>
+
+                <!-- Logic Card -->
+                <div class="glass-card p-6 border-l-4 border-l-emerald-500 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-emerald-100 rounded-full opacity-50 blur-xl"></div>
+                    <div class="relative z-10">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider">Logic Focus</h3>
+                            <div class="p-2 bg-emerald-50 rounded-lg"><i class="fas fa-brain text-emerald-500"></i></div>
+                        </div>
+                        <h2 id="avgLogic" class="text-4xl font-black text-gray-800">--%</h2>
+                    </div>
+                </div>
+
+                <!-- Time Card -->
+                <div class="glass-card p-6 border-l-4 border-l-rose-500 relative overflow-hidden">
+                     <div class="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-rose-100 rounded-full opacity-50 blur-xl"></div>
+                     <div class="relative z-10">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider">Average Time</h3>
+                            <div class="p-2 bg-rose-50 rounded-lg"><i class="fas fa-stopwatch text-rose-500"></i></div>
+                        </div>
+                        <h2 id="avgTime" class="text-4xl font-black text-gray-800">-- <span class="text-lg text-gray-500 font-medium">min</span></h2>
+                    </div>
+                </div>
+
+                <!-- Test Count Card -->
+                <div class="glass-card p-6 border-l-4 border-l-amber-500 relative overflow-hidden">
+                     <div class="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-amber-100 rounded-full opacity-50 blur-xl"></div>
+                     <div class="relative z-10">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider">Total Exams</h3>
+                            <div class="p-2 bg-amber-50 rounded-lg"><i class="fas fa-file-alt text-amber-500"></i></div>
+                        </div>
+                        <h2 id="testCount" class="text-4xl font-black text-gray-800">0</h2>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Empty State Warning -->
+            <div id="emptyState" class="hidden bg-white rounded-2xl p-12 text-center shadow-sm border border-gray-100 mb-8">
+                <div class="w-20 h-20 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i class="fas fa-chart-bar text-3xl text-indigo-300"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-800 mb-2">No Data Available Yet</h3>
+                <p class="text-gray-500 mb-6">Head over to the Teacher Portal to upload the first set of exam metrics.</p>
+                <a href="teacher.html" class="inline-block bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-xl shadow-md transition transform hover:-translate-y-1">
+                    Go to Upload Portal
+                </a>
+            </div>
+
+            <!-- Charts Area -->
+            <div id="chartsArea" class="grid grid-cols-1 lg:grid-cols-2 gap-8 hidden">
+                
+                <!-- Speed vs Accuracy -->
+                <div class="glass-card p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="font-bold text-gray-800 text-lg">Speed vs Accuracy</h3>
+                        <div class="p-1.5 bg-gray-50 rounded text-gray-400 hover:text-gray-600 cursor-help" title="Scatter plot showing relation between time taken and score."><i class="fas fa-info-circle"></i></div>
+                    </div>
+                    <div class="chart-container"><canvas id="timeChart"></canvas></div>
+                </div>
+
+                <!-- Mistake Types -->
+                <div class="glass-card p-6">
+                     <div class="flex justify-between items-center mb-6">
+                        <h3 class="font-bold text-gray-800 text-lg">Error Classification</h3>
+                        <div class="p-1.5 bg-gray-50 rounded text-gray-400 hover:text-gray-600 cursor-help" title="Breakdown of concept errors vs careless mistakes."><i class="fas fa-info-circle"></i></div>
+                    </div>
+                    <div class="chart-container"><canvas id="pieChart"></canvas></div>
+                </div>
+
+                <!-- Score History (Full Width) -->
+                <div class="glass-card p-6 lg:col-span-2">
+                     <div class="flex justify-between items-center mb-6">
+                        <h3 class="font-bold text-gray-800 text-lg">Performance Trend</h3>
+                        <div class="p-1.5 bg-gray-50 rounded text-gray-400 hover:text-gray-600 cursor-help" title="Line graph tracking score improvement over time."><i class="fas fa-info-circle"></i></div>
+                    </div>
+                    <div class="chart-container" style="height: 320px;"><canvas id="lineChart"></canvas></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Data Handling
+        let historyData = JSON.parse(localStorage.getItem('eduMetricsHistory')) || [];
+
+        function clearData() {
+            if(confirm("Are you sure you want to permanently delete all saved test data?")) {
+                localStorage.removeItem('eduMetricsHistory');
+                location.reload();
+            }
+        }
+
+        // --- Chart Configuration & Rendering ---
+        
+        // Global Chart Styling
+        Chart.defaults.font.family = "'Inter', sans-serif";
+        Chart.defaults.color = '#9ca3af'; // Tailwind gray-400
+        Chart.defaults.scale.grid.color = 'rgba(243, 244, 246, 0.5)'; // Subtle grid lines
+
+        if(historyData.length === 0) {
+            // Show empty state if no data
+            document.getElementById('emptyState').classList.remove('hidden');
+        } else {
+            // Show charts area
+            document.getElementById('chartsArea').classList.remove('hidden');
+
+            let totalScore = 0, totalTime = 0, totalLogic = 0, totalConcept = 0, totalCareless = 0;
+            let labels = [], scores = [], scatterData = [];
+
+            // Process Data
+            historyData.forEach((test, index) => {
+                totalScore += test.score; 
+                totalTime += test.time; 
+                totalLogic += test.logical;
+                totalConcept += test.concept; 
+                totalCareless += test.careless;
+                
+                labels.push(`Test ${index + 1} (${test.topic.substring(0,3)})`); // Short label
+                scores.push(test.score);
+                scatterData.push({ x: test.time, y: test.score });
+            });
+
+            const count = historyData.length;
+            
+            // Update KPI UI with animations
+            animateValue("avgScore", 0, Math.round(totalScore/count), 1000, "%");
+            animateValue("avgTime", 0, Math.round(totalTime/count), 1000, "");
+            animateValue("avgLogic", 0, Math.round(totalLogic/count), 1000, "%");
+            animateValue("testCount", 0, count, 500, "");
+
+            // 1. Scatter Chart (Speed vs Accuracy)
+            new Chart(document.getElementById('timeChart').getContext('2d'), { 
+                type: 'scatter', 
+                data: { 
+                    datasets: [{ 
+                        label: 'Exam Results', 
+                        data: scatterData, 
+                        backgroundColor: '#ef4444', // Red-500
+                        pointRadius: 6,
+                        pointHoverRadius: 9,
+                        borderColor: '#ffffff',
+                        borderWidth: 2
+                    }] 
+                }, 
+                options: { 
+                    responsive: true, maintainAspectRatio: false,
+                    scales: { 
+                        x: { title: {display: true, text: 'Time (Minutes)', font: {weight: 'bold'}}, min: 0 }, 
+                        y: { title: {display: true, text: 'Score (%)', font: {weight: 'bold'}}, min: 0, max: 100 } 
+                    },
+                    plugins: { legend: { display: false } }
+                } 
+            });
+
+            // 2. Doughnut Chart (Mistake Types)
+            new Chart(document.getElementById('pieChart').getContext('2d'), { 
+                type: 'doughnut', 
+                data: { 
+                    labels: ['Concept Misunderstanding', 'Careless Calculation'], 
+                    datasets: [{ 
+                        data: [totalConcept, totalCareless], 
+                        backgroundColor: ['#8b5cf6', '#fbbf24'], // Violet, Amber
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }] 
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    cutout: '70%',
+                    plugins: { 
+                        legend: { position: 'bottom', labels: { padding: 20, usePointStyle: true } } 
+                    }
+                }
+            });
+
+            // 3. Line Chart (Trend)
+            const ctxLine = document.getElementById('lineChart').getContext('2d');
+            // Create gradient fill for line chart
+            let gradientFill = ctxLine.createLinearGradient(0, 0, 0, 400);
+            gradientFill.addColorStop(0, 'rgba(16, 185, 129, 0.4)'); // Emerald top
+            gradientFill.addColorStop(1, 'rgba(16, 185, 129, 0.0)'); // Transparent bottom
+
+            new Chart(ctxLine, { 
+                type: 'line', 
+                data: { 
+                    labels: labels, 
+                    datasets: [{ 
+                        label: 'Overall Score', 
+                        data: scores, 
+                        borderColor: '#10b981', // Emerald
+                        tension: 0.4, // Smooth curve
+                        fill: true, 
+                        backgroundColor: gradientFill, 
+                        borderWidth: 3,
+                        pointBackgroundColor: '#ffffff',
+                        pointBorderColor: '#10b981',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }] 
+                }, 
+                options: { 
+                    responsive: true, maintainAspectRatio: false,
+                    scales: { y: { min: 0, max: 100, grid: { borderDash: [5, 5] } } },
+                    plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false } },
+                    interaction: { mode: 'nearest', axis: 'x', intersect: false }
+                } 
+            });
+        }
+
+        // Helper function to animate number counters
+        function animateValue(id, start, end, duration, suffix) {
+            if (start === end) return;
+            var range = end - start;
+            var current = start;
+            var increment = end > start ? 1 : -1;
+            var stepTime = Math.abs(Math.floor(duration / range));
+            var obj = document.getElementById(id);
+            var timer = setInterval(function() {
+                current += increment;
+                obj.innerHTML = current + suffix;
+                if (current == end) { clearInterval(timer); }
+            }, stepTime);
+        }
+    </script>
+</body>
+</html>
