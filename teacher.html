@@ -103,36 +103,33 @@
         
         let uploadedFiles = [];
 
-        // Exact Hardcoded Data matching your specific images for the presentation!
+        // Exact Hardcoded Data matching your specific images!
         const presentationData = [
-            // Data for the FIRST image you upload (The 50m falling ball)
-            { topic: "Physics - Kinematics", question: "A ball is dropped from a 50m building. How long to hit the ground? (g = 9.8)", correct: "3.19 seconds", student: "3.19 seconds", mistake: "Careless", guessed: false, steps: "Initial careless algebra error, but made an excellent recovery. (+9/10)", pred: "Prone to minor arithmetic errors in intermediate steps." },
-            { topic: "Physics - Kinematics", question: "Calculate final velocity before impact.", correct: "31.26 m/s downwards", student: "31.26 m/s downwards", mistake: "None", guessed: false, steps: "Perfect logical deduction! (+10/10)", pred: "Strong grasp of kinematic formulas." },
+            // CALCULUS IMAGE (3 Questions)
+            { topic: "Calculus", question: "Evaluate the integral of x*sin(x) dx.", correct: "-x*cos(x) + sin(x) + C", student: "-x*cos(x) + sin(x) + C", mistake: "Careless", guessed: false, steps: "Careless sign error corrected. Good! (+10)", pred: "Watch negative signs during integration by parts." },
+            { topic: "Calculus", question: "Find the derivative of f(x) = e^(2x) * ln(x).", correct: "e^(2x) * [2*ln(x) + 1/x]", student: "e^(2x) * [2*ln(x) + 1/x]", mistake: "None", guessed: false, steps: "Perfect logic here. (+10)", pred: "Strong grasp of product rule." },
+            { topic: "Calculus", question: "Find limits as x -> 0 for sin(x)/x.", correct: "1", student: "1", mistake: "Conceptual", guessed: false, steps: "Concept Error initially, but recovered well. (-2)", pred: "Review standard limits vs L'Hopital." },
             
-            // Data for the SECOND image you upload (Kinetic Energy)
-            { topic: "Physics - Energy", question: "Calculate the Kinetic Energy of a 4kg object moving at 3 m/s.", correct: "18 Joules", student: "6 Joules", mistake: "Conceptual", guessed: false, steps: "Used KE = 1/2*m*v instead of KE = 1/2*m*v². Failed to square the velocity.", pred: "Likely to miss exponents in future formulas like Spring Potential Energy." },
+            // KINEMATICS IMAGE (2 Questions)
+            { topic: "Physics - Kinematics", question: "A ball is dropped from a 50m building. How long to hit the ground? (g = 9.8)", correct: "3.19 seconds", student: "3.19 seconds", mistake: "Careless", guessed: false, steps: "Initial careless algebra error, but made an excellent recovery. (+9/10)", pred: "Prone to minor arithmetic errors." },
+            { topic: "Physics - Kinematics", question: "Calculate final velocity before impact.", correct: "31.26 m/s downwards", student: "31.26 m/s downwards", mistake: "None", guessed: false, steps: "Perfect logical deduction! (+10/10)", pred: "Solid understanding of kinematics." },
             
-            // Data for the THIRD image (Geometry)
-            { topic: "Geometry", question: "Find the hypotenuse (c) of a right triangle where side a = 6 and side b = 8.", correct: "10", student: "50", mistake: "Careless", guessed: false, steps: "Correctly calculated c² = 100, but divided by 2 instead of taking the square root.", pred: "Prone to rushing final computational steps." }
+            // CHEMISTRY IMAGE (3 Questions)
+            { topic: "Stoichiometry", question: "Balance the following equation: Fe + O2 -> Fe2O3", correct: "4Fe + 3O2 -> 2Fe2O3", student: "4Fe + 3O2 -> 2Fe2O3", mistake: "Careless", guessed: false, steps: "Correct in the end. (+5)", pred: "Double check diatomic molecules." },
+            { topic: "Stoichiometry", question: "How many moles are in 50g of NaCl? (Molar mass = 58.44 g/mol)", correct: "0.855 moles", student: "2922 moles", mistake: "Conceptual", guessed: false, steps: "CONCEPT ERROR! Moles = Mass / Molar Mass. You multiplied instead of dividing. (0/10)", pred: "Will struggle with unit conversions." },
+            { topic: "Chemistry", question: "Calculate the pH of a 0.01M HCl solution.", correct: "2", student: "2", mistake: "None", guessed: false, steps: "Good. (+10)", pred: "Understands basic pH calculations." },
+
+            // GEOMETRY IMAGE (1 Question)
+            { topic: "Geometry", question: "Find the hypotenuse (c) of a right triangle where side a = 6 and side b = 8.", correct: "10", student: "50", mistake: "Careless", guessed: false, steps: "Correctly summed to 100, but forgot the square root. (-2 points)", pred: "Often forgets final step in squared variables." },
+
+            // ENERGY IMAGE (1 Question)
+            { topic: "Physics - Energy", question: "Calculate the Kinetic Energy of a 4kg object moving at 3 m/s.", correct: "18 Joules", student: "6 Joules", mistake: "Conceptual", guessed: false, steps: "Failed to square velocity. Used 1/2*m*v instead of 1/2*m*v².", pred: "High risk of missing exponents in standard formulas." }
         ];
 
         // Drag & Drop Handlers
-        dropZone.addEventListener('dragover', (e) => { 
-            e.preventDefault(); 
-            dropZone.classList.add('dragover'); 
-        });
-        
-        dropZone.addEventListener('dragleave', (e) => { 
-            e.preventDefault(); 
-            dropZone.classList.remove('dragover'); 
-        });
-        
-        dropZone.addEventListener('drop', (e) => { 
-            e.preventDefault(); 
-            dropZone.classList.remove('dragover'); 
-            handleFiles(e.dataTransfer.files); 
-        });
-        
+        dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+        dropZone.addEventListener('dragleave', (e) => { e.preventDefault(); dropZone.classList.remove('dragover'); });
+        dropZone.addEventListener('drop', (e) => { e.preventDefault(); dropZone.classList.remove('dragover'); handleFiles(e.dataTransfer.files); });
         fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
 
         function handleFiles(files) {
@@ -153,13 +150,13 @@
         function generateCards() {
             cardsContainer.innerHTML = ''; 
             let globalQNum = 1; 
-            let dataIndex = 0; // We pull strictly in order now, no randomizing!
+            let dataIndex = 0; 
+            
+            const questionsPerImage = [3, 2, 3, 1, 1]; // Array dictating questions per file
             
             uploadedFiles.forEach((file, fileIndex) => {
                 const imageUrl = URL.createObjectURL(file);
-                
-                // If it's the first image, extract 2 questions. Otherwise extract 1.
-                let numQuestionsInImage = (fileIndex === 0) ? 2 : 1;
+                let numQuestionsInImage = questionsPerImage[fileIndex] || 1; 
 
                 const docHeader = `
                     <div class="bg-indigo-600 text-white font-black px-5 py-3 rounded-xl mt-8 mb-4 shadow-md flex items-center justify-between">
@@ -169,8 +166,7 @@
                 cardsContainer.insertAdjacentHTML('beforeend', docHeader);
 
                 for(let i = 0; i < numQuestionsInImage; i++) {
-                    // Fallback to a default if you upload too many images
-                    const aiData = presentationData[dataIndex] || { topic: "General Math", question: "Solve the equation.", correct: "100", student: "85", mistake: "Practice", guessed: true, steps: "Needs review.", pred: "Needs practice." };
+                    const aiData = presentationData[dataIndex] || { topic: "General Math", question: "Solve the equation.", correct: "N/A", student: "N/A", mistake: "Practice", guessed: false, steps: "Needs review.", pred: "Needs practice." };
                     
                     addCardHTML(imageUrl, globalQNum, aiData, false, fileIndex + 1);
                     
@@ -196,7 +192,7 @@
                         <img src="${imageUrl}" class="w-full max-h-40 object-cover rounded-lg group-hover:scale-105 transition duration-300">
                     </div>` : '<div class="w-full md:w-1/4 flex items-center justify-center bg-gray-50 rounded-xl border border-gray-200 text-gray-400 font-semibold text-sm">Manual Entry</div>'}
                     
-                    <div class="w-full ${imageUrl ? 'md:w-3/4' : 'md:w-3/4'} space-y-4">
+                    <div class="w-full md:w-3/4 space-y-4">
                         <div class="flex items-center gap-3 mb-2">
                             <span class="bg-gray-200 text-gray-700 font-black px-3 py-1 rounded-lg text-sm">Q${qNum}</span>
                             <input type="text" class="card-topic input-field font-bold text-gray-800" value="${data.topic}" placeholder="Topic e.g. Calculus">
@@ -269,7 +265,7 @@
                 questions.push({
                     qNum: index + 1, 
                     topic: card.querySelector('.card-topic').value || "General",
-                    questionText: card.querySelector('.card-question').value,
+                    question: card.querySelector('.card-question').value,
                     correctAns: card.querySelector('.card-correct').value,
                     studentAns: card.querySelector('.card-student').value,
                     mistakeType: mistakeType,
