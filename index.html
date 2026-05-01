@@ -273,6 +273,7 @@
 
         // ==========================================
         // ROBUST DATA INITIALIZATION 
+        // Loops through every question dynamically
         // ==========================================
         let historyData = [];
         try { historyData = JSON.parse(localStorage.getItem('eduMetricsV3')) || []; } catch(e) { historyData = []; }

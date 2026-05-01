@@ -53,8 +53,8 @@
                         <input type="text" id="globalStudent" class="input-field" value="OBED GANTA">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Subject</label>
-                        <input type="text" id="globalSubject" class="input-field" placeholder="e.g. Mathematics" value="Science & Math Exam">
+                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Assessment Title</label>
+                        <input type="text" id="globalSubject" class="input-field" placeholder="e.g. Mathematics" value="Comprehensive Finals 2026">
                     </div>
                 </div>
 
@@ -103,34 +103,64 @@
         
         let uploadedFiles = [];
 
-        // Exact Hardcoded Data matching your specific images!
-        const presentationData = [
-            // CALCULUS IMAGE (3 Questions)
-            { topic: "Calculus", question: "Evaluate the integral of x*sin(x) dx.", correct: "-x*cos(x) + sin(x) + C", student: "-x*cos(x) + sin(x) + C", mistake: "Careless", guessed: false, steps: "Careless sign error corrected. Good! (+10)", pred: "Watch negative signs during integration by parts." },
-            { topic: "Calculus", question: "Find the derivative of f(x) = e^(2x) * ln(x).", correct: "e^(2x) * [2*ln(x) + 1/x]", student: "e^(2x) * [2*ln(x) + 1/x]", mistake: "None", guessed: false, steps: "Perfect logic here. (+10)", pred: "Strong grasp of product rule." },
-            { topic: "Calculus", question: "Find limits as x -> 0 for sin(x)/x.", correct: "1", student: "1", mistake: "Conceptual", guessed: false, steps: "Concept Error initially, but recovered well. (-2)", pred: "Review standard limits vs L'Hopital." },
-            
-            // KINEMATICS IMAGE (2 Questions)
-            { topic: "Physics - Kinematics", question: "A ball is dropped from a 50m building. How long to hit the ground? (g = 9.8)", correct: "3.19 seconds", student: "3.19 seconds", mistake: "Careless", guessed: false, steps: "Initial careless algebra error, but made an excellent recovery. (+9/10)", pred: "Prone to minor arithmetic errors." },
-            { topic: "Physics - Kinematics", question: "Calculate final velocity before impact.", correct: "31.26 m/s downwards", student: "31.26 m/s downwards", mistake: "None", guessed: false, steps: "Perfect logical deduction! (+10/10)", pred: "Solid understanding of kinematics." },
-            
-            // CHEMISTRY IMAGE (3 Questions)
-            { topic: "Stoichiometry", question: "Balance the following equation: Fe + O2 -> Fe2O3", correct: "4Fe + 3O2 -> 2Fe2O3", student: "4Fe + 3O2 -> 2Fe2O3", mistake: "Careless", guessed: false, steps: "Correct in the end. (+5)", pred: "Double check diatomic molecules." },
-            { topic: "Stoichiometry", question: "How many moles are in 50g of NaCl? (Molar mass = 58.44 g/mol)", correct: "0.855 moles", student: "2922 moles", mistake: "Conceptual", guessed: false, steps: "CONCEPT ERROR! Moles = Mass / Molar Mass. You multiplied instead of dividing. (0/10)", pred: "Will struggle with unit conversions." },
-            { topic: "Chemistry", question: "Calculate the pH of a 0.01M HCl solution.", correct: "2", student: "2", mistake: "None", guessed: false, steps: "Good. (+10)", pred: "Understands basic pH calculations." },
-
-            // GEOMETRY IMAGE (1 Question)
-            { topic: "Geometry", question: "Find the hypotenuse (c) of a right triangle where side a = 6 and side b = 8.", correct: "10", student: "50", mistake: "Careless", guessed: false, steps: "Correctly summed to 100, but forgot the square root. (-2 points)", pred: "Often forgets final step in squared variables." },
-
-            // ENERGY IMAGE (1 Question)
-            { topic: "Physics - Energy", question: "Calculate the Kinetic Energy of a 4kg object moving at 3 m/s.", correct: "18 Joules", student: "6 Joules", mistake: "Conceptual", guessed: false, steps: "Failed to square velocity. Used 1/2*m*v instead of 1/2*m*v².", pred: "High risk of missing exponents in standard formulas." }
-        ];
+        // Exact Database of all provided images for flawless presentation mapping
+        const imageDatabase = {
+            "134558": [ // Calculus (3 Questions)
+                { topic: "Calculus", question: "Evaluate the integral of x*sin(x) dx.", correct: "-x*cos(x) + sin(x) + C", student: "-x*cos(x) + sin(x) + C", mistake: "Careless", guessed: false, steps: "Careless sign error corrected. Good! (+10)", pred: "Check negative signs during integration by parts." },
+                { topic: "Calculus", question: "Find the derivative of f(x) = e^(2x) * ln(x).", correct: "e^(2x) * [2*ln(x) + 1/x]", student: "e^(2x) * [2*ln(x) + 1/x]", mistake: "None", guessed: false, steps: "Perfect logic here. (+10)", pred: "Strong grasp of product rule." },
+                { topic: "Calculus", question: "Find limits as x -> 0 for sin(x)/x.", correct: "1", student: "1", mistake: "Conceptual", guessed: false, steps: "Concept Error initially, but recovered well with L'Hopital. (-2)", pred: "Review standard limits vs L'Hopital." }
+            ],
+            "140048": [ // Kinematics (2 Questions)
+                { topic: "Physics - Kinematics", question: "A ball is dropped from a 50m building. How long to hit the ground? (g = 9.8)", correct: "3.19 seconds", student: "3.19 seconds", mistake: "Careless", guessed: false, steps: "Initial careless algebra error, but made an excellent recovery. (+9/10)", pred: "Prone to minor arithmetic errors isolating variables." },
+                { topic: "Physics - Kinematics", question: "Calculate final velocity before impact.", correct: "31.26 m/s downwards", student: "31.26 m/s downwards", mistake: "None", guessed: false, steps: "Perfect logical deduction! (+10/10)", pred: "Solid understanding of kinematics." }
+            ],
+            "140055": [ // Stoichiometry (3 Questions)
+                { topic: "Stoichiometry", question: "Balance the following equation: Fe + O2 -> Fe2O3", correct: "4Fe + 3O2 -> 2Fe2O3", student: "4Fe + 3O2 -> 2Fe2O3", mistake: "Careless", guessed: false, steps: "Correct in the end. Crossed out initial attempt. (+5)", pred: "Double check diatomic molecules." },
+                { topic: "Stoichiometry", question: "How many moles are in 50g of NaCl? (Molar mass = 58.44 g/mol)", correct: "0.855 moles", student: "2922 moles", mistake: "Conceptual", guessed: false, steps: "CONCEPT ERROR! Moles = Mass / Molar Mass. You multiplied instead of dividing. (0/10)", pred: "Will struggle with dimensional analysis and unit conversions." },
+                { topic: "Chemistry", question: "Calculate the pH of a 0.01M HCl solution.", correct: "2", student: "2", mistake: "None", guessed: false, steps: "Good. (+10)", pred: "Understands basic pH calculations." }
+            ],
+            "142010": [ // Math Midterm (3 Questions)
+                { topic: "Algebra", question: "Solve for x: 2(x + 3) = 14", correct: "4", student: "5.5", mistake: "Careless", guessed: false, steps: "Did 14 - 3 = 11 instead of subtracting 6.", pred: "Watch distribution rules across parentheses." },
+                { topic: "Geometry", question: "Calculate the area of a circle with a radius of 4cm. (Use π = 3.14)", correct: "50.24 cm²", student: "50.42 cm²", mistake: "Careless", guessed: false, steps: "Transposed numbers at the final multiplication step (50.24 vs 50.42).", pred: "Careless calculation errors." },
+                { topic: "Algebra", question: "Simplify: x³ * x²", correct: "x⁵", student: "x⁵", mistake: "None", guessed: false, steps: "Correctly applied exponent rules.", pred: "Understands base exponent laws." }
+            ],
+            "142115": [ // Energy (1 Question)
+                 { topic: "Physics - Energy", question: "Calculate the Kinetic Energy of a 4kg object moving at 3 m/s.", correct: "18 Joules", student: "6 Joules", mistake: "Conceptual", guessed: false, steps: "Failed to square the velocity. Used 1/2*m*v instead of 1/2*m*v².", pred: "High risk of missing exponents in standard physics formulas." }
+            ],
+            "142132": [ // Geometry Pop Quiz (1 Question)
+                 { topic: "Geometry", question: "Find the hypotenuse (c) of a right triangle where side a = 6 and side b = 8.", correct: "10", student: "50", mistake: "Careless", guessed: false, steps: "Correctly summed squares to 100, but forgot to take the square root at the end. (-2 points)", pred: "Often forgets the final step of isolating squared variables." }
+            ]
+        };
+        // Duplicate Stoichiometry image
+        imageDatabase["142053"] = imageDatabase["140055"];
 
         // Drag & Drop Handlers
         dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
         dropZone.addEventListener('dragleave', (e) => { e.preventDefault(); dropZone.classList.remove('dragover'); });
         dropZone.addEventListener('drop', (e) => { e.preventDefault(); dropZone.classList.remove('dragover'); handleFiles(e.dataTransfer.files); });
         fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
+
+        function matchFileToData(file, fileIndex) {
+            const name = file.name || "";
+            if (name.includes("134558")) return imageDatabase["134558"];
+            if (name.includes("140048")) return imageDatabase["140048"];
+            if (name.includes("140055")) return imageDatabase["140055"];
+            if (name.includes("142053")) return imageDatabase["142053"];
+            if (name.includes("142010")) return imageDatabase["142010"];
+            if (name.includes("142115")) return imageDatabase["142115"];
+            if (name.includes("142132")) return imageDatabase["142132"];
+            
+            // Fallback Sequence if you renamed the files on your computer!
+            const sequence = [
+                imageDatabase["134558"], // Calc
+                imageDatabase["140048"], // Kinematics
+                imageDatabase["140055"], // Chem
+                imageDatabase["142010"], // Math
+                imageDatabase["142115"], // Energy
+                imageDatabase["142132"]  // Geometry
+            ];
+            return sequence[fileIndex % sequence.length];
+        }
 
         function handleFiles(files) {
             if (!files || files.length === 0) return;
@@ -140,40 +170,32 @@
             uploadPhase.classList.add('hidden');
             scanningPhase.classList.remove('hidden');
 
+            // Simulate the scanning delay for the presentation
             setTimeout(() => {
-                generateCards();
+                cardsContainer.innerHTML = ''; 
+                let globalQNum = 1; 
+                
+                uploadedFiles.forEach((file, fileIndex) => {
+                    const imageUrl = URL.createObjectURL(file);
+                    const matchedQuestions = matchFileToData(file, fileIndex);
+                    const numQuestionsInImage = matchedQuestions.length;
+
+                    const docHeader = `
+                        <div class="bg-indigo-600 text-white font-black px-5 py-3 rounded-xl mt-8 mb-4 shadow-md flex items-center justify-between">
+                            <span class="text-lg"><i class="fas fa-file-image mr-2"></i> Document ${fileIndex + 1}</span>
+                            <span class="bg-indigo-800 text-indigo-100 px-3 py-1 rounded-lg text-xs tracking-widest uppercase">AI Extracted ${numQuestionsInImage} Questions</span>
+                        </div>`;
+                    cardsContainer.insertAdjacentHTML('beforeend', docHeader);
+
+                    matchedQuestions.forEach((qData) => {
+                        addCardHTML(imageUrl, globalQNum, qData, false, fileIndex + 1);
+                        globalQNum++;
+                    });
+                });
+
                 scanningPhase.classList.add('hidden');
                 verificationPhase.classList.remove('hidden');
-            }, 3000);
-        }
-
-        function generateCards() {
-            cardsContainer.innerHTML = ''; 
-            let globalQNum = 1; 
-            let dataIndex = 0; 
-            
-            const questionsPerImage = [3, 2, 3, 1, 1]; // Array dictating questions per file
-            
-            uploadedFiles.forEach((file, fileIndex) => {
-                const imageUrl = URL.createObjectURL(file);
-                let numQuestionsInImage = questionsPerImage[fileIndex] || 1; 
-
-                const docHeader = `
-                    <div class="bg-indigo-600 text-white font-black px-5 py-3 rounded-xl mt-8 mb-4 shadow-md flex items-center justify-between">
-                        <span class="text-lg"><i class="fas fa-file-image mr-2"></i> Document ${fileIndex + 1}</span>
-                        <span class="bg-indigo-800 text-indigo-100 px-3 py-1 rounded-lg text-xs tracking-widest uppercase">AI Extracted ${numQuestionsInImage} Questions</span>
-                    </div>`;
-                cardsContainer.insertAdjacentHTML('beforeend', docHeader);
-
-                for(let i = 0; i < numQuestionsInImage; i++) {
-                    const aiData = presentationData[dataIndex] || { topic: "General Math", question: "Solve the equation.", correct: "N/A", student: "N/A", mistake: "Practice", guessed: false, steps: "Needs review.", pred: "Needs practice." };
-                    
-                    addCardHTML(imageUrl, globalQNum, aiData, false, fileIndex + 1);
-                    
-                    globalQNum++;
-                    dataIndex++;
-                }
-            });
+            }, 2500); // 2.5 second dramatic pause
         }
 
         function addBlankCard() {
